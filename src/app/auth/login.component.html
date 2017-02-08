@@ -1,0 +1,49 @@
+<div class="row text-center">
+    <a href="http://www.ireport.cz"><!--img src="../../assets/img/ireport-trnsp.png"--></a>
+</div>
+<div class="row no-gutter" style="margin-top:4em;margin-bottom:2em">
+    <div class="col-md-6">
+        <div style="width:250px;margin-left:auto;margin-right:30px;">
+            <div class="form-group">
+                <a class="btn btn-block btn-social btn-facebook" (click)="loginFacebook()">
+                    <span class="fa fa-facebook"></span>Log in with Facebook
+                </a>
+            </div>
+            <div class="form-group">
+                <a class="btn btn-block btn-social btn-google" (click)="loginGoogle()">
+                    <span class="fa fa-google"></span>Log in with Google
+                </a>
+            </div>
+            <div class="form-group">
+                <a class="btn btn-block btn-social btn-twitter" (click)="loginTwitter()">
+                    <span class="fa fa-twitter"></span>Log in with Twitter
+                </a>
+            </div>
+      </div>
+    </div>
+    <div class="col-md-6">
+        <div style="border-left:1px solid #ddd;padding-left: 30px;">
+            <form #formData='ngForm' (ngSubmit)="onSubmit(formData)" style="width:250px">
+                <div class="form-group">
+                    <input type="email" name="email" class="form-control" placeholder="Email" [(ngModel)]="email" required>
+                </div>
+                <div class="form-group">
+                    <input type="password" class="form-control" name="password" placeholder="Password" [(ngModel)]="password" required>
+                </div>
+                <div class="form-group">
+                    <button type="submit" class="btn btn-primary btn-block" [disabled]="!formData.valid">Log in</button>
+                </div>
+                <!--div>
+                    <br/>
+                    <a routerLink="/signup">Don't have an account?</a> &bull; <a routerLink="/password-reset">Forgotten password?</a>
+                </div-->
+            </form>
+        </div>
+    </div>
+</div>
+<div class="row" *ngIf="error">
+    <div class="alert alert-danger center-block" role="alert" style="width: 560px;">{{error}}</div>
+</div>
+<div class="row text-center navbar-fixed-bottom">
+    <p><small>Editorial Office System. Created &amp; operated by <a href="http://www.aiteq.com">Aiteq Reloaded, s.r.o.</a></small><p>
+</div>

@@ -1,0 +1,38 @@
+/*
+ * event type icons
+ */
+
+$ctx-color-concert: #0099ff;
+$ctx-color-festival: #ffcc00;
+$ctx-color-press: inherit;
+$ctx-color-review: inherit;
+$ctx-color-interview: inherit;
+$ctx-color-movie: inherit;
+$ctx-color-shooting: inherit;
+$ctx-color-other: inherit;
+
+fa i.fa-music {
+  color: $ctx-color-concert;
+}
+fa i.fa-sun-o {
+  color: $ctx-color-festival;
+}
+fa i.fa-comment-o {
+  color: $ctx-color-press;
+}
+fa i.fa-headphones {
+  color: $ctx-color-review;
+}
+fa i.fa-comments-o {
+  color: $ctx-color-interview;
+}
+fa i.fa-film {
+  color: $ctx-color-movie;
+}
+fa i.fa-video-camera {
+  color: $ctx-color-shooting;
+}
+fa i.fa-calendar-o {
+  color: $ctx-color-other;
+}
+

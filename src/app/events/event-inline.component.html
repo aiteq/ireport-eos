@@ -1,0 +1,252 @@
+        {{eventObject | json}}
+<ngb-tabset class="w-100">
+
+  <ngb-tab *ngIf="eventObject && eventObject.id" title="Event info">
+    <template ngbTabContent>
+      <h2>
+        <event-type [type]="eventObject.type"></event-type>
+        {{eventObject.title}}
+      </h2>
+      <h3>
+        <span *ngIf="eventObject.start">{{eventObject.start | amDateFormat:'D. M. YYYY'}}</span>
+        <span *ngIf="!eventObject.start">(no date)</span>
+        <span *ngIf="eventObject.venue">({{eventObject.venue.name}}, {{eventObject.venue.city}})</span>
+      </h3>
+      <div>Performers</div>
+      <div>Web</div>
+      <div>FB event</div>
+      <div>Tickets</div>
+    </template>
+  </ngb-tab>
+
+  <ngb-tab title="{{eventObject.id ? 'Edit event' : 'Add new event'}}">
+    <template ngbTabContent>
+
+      <form #f="ngForm">
+
+        <div class="row">
+
+          <div class="col-6 pr-0">
+            <div class="row">
+
+              <div class="form-group col-7 pr-0">
+                <div class="">
+                  <label for="eventName">Name</label>
+                  <spinner *ngIf="!importedEvents && !eventObject.id" title="loading imported events"></spinner>
+                </div>
+                <ng-container *ngIf="eventObject.id">
+                  <input type="text" id="eventName" name="title" class="form-control" [ngModel]="eventObject" required focus empty="title"/>
+                </ng-container>
+                <ng-container *ngIf="!eventObject.id">
+                  <template #rtEvent let-r="result" let-t="term">
+                    <event-type [type]="r.type"></event-type>
+                    <span *ngIf="r.start" class="text-aux">{{r.start | amDateFormat:'D. M. YYYY'}}</span>
+                    <span *ngIf="!r.start">(no date)</span>
+                    <span [innerHtml]="highlightTerm(r.title, t)"></span>
+                    <span *ngIf="r.venue" class="text-aux">({{r.venue.name}}, {{r.venue.city}})</span>
+                  </template>
+                  <input type="text" id="eventName" name="title" class="form-control" placeholder="start typing to search event" [ngModel]="eventObject" (ngModelChange)="eventObject.title = $event.title || $event" (selectItem)="selectImported($event)" [ngbTypeahead]="searchImported" [resultTemplate]="rtEvent" [inputFormatter]="formatEvent" required focus empty="title"/>
+                </ng-container>
+              </div> <!-- form-group name -->
+
+              <div class="form-group col-4 pr-0">
+                <label for="typeName">Type</label>
+                <input type="hidden" name="type" [ngModel]="eventObject.type">
+                <div class="input-group">
+                  <input type="text" id="typeName" name="typeName" class="form-control" readonly placeholder="select type" [ngModel]="EventTypeNames[eventObject.type] && EventTypeNames[eventObject.type].label" required>
+                  <div ngbDropdown class="input-group-btn">
+                    <button type="button" class="btn btn-secondary dropdown-toggle-split" ngbDropdownToggle title="select type of event">
+                    </button>
+                    <div class="dropdown-menu dropdown-menu-right">
+                      <button *ngFor="let t of EventType.array" type="button" class="dropdown-item" (click)="eventObject.type=t">
+                        <event-type [type]="t" [text]="true"></event-type>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div> <!-- form-group type -->
+
+            </div> <!-- row name & type -->
+
+            <div class="row">
+              <div class="form-group col-7 pr-0">
+                <label for="venueName">Venue</label>
+                <spinner *ngIf="!venues" title="loading venues"></spinner>
+                <div>
+                  <template #rtVenue let-r="result" let-t="term">
+                    <span [innerHtml]="highlightTerm(r.name, t)"></span>, {{r.city}}
+                  </template>
+                  <div class="input-group">
+                    <input type="text" id="venueName" name="venueName" class="form-control" placeholder="start typing to search venue" [ngModel]="eventObject.venue" (ngModelChange)="eventObject.venue.name = $event.name || $event" (selectItem)="selectVenue($event)" [ngbTypeahead]="searchVenues" [resultTemplate]="rtVenue" [inputFormatter]="formatVenue" empty="name">
+                  </div>
+                </div>
+              </div> <!-- form-group venue -->
+
+              <div class="form-group col-4 pr-0">
+                <label for="venueCity">City</label>
+                <input type="text" id="venueCity" name="venueCity" class="form-control" [(ngModel)]="eventObject.venue && eventObject.venue.city" empty>
+              </div> <!-- form-group city -->
+
+            </div> <!-- row venue & city -->
+
+            <div class="row align-items-end">
+
+              <div class="form-group col col-md-auto pr-0">
+                <label for="startDate">Start</label>
+                <input class="form-control" type="date" id="startDate" name="startDate" [(ngModel)]="eventObject.inputStartDate" required>
+              </div>
+              <div class="form-group col col-md-auto  pl-1 pr-0">
+                <a *ngIf="eventObject.inputStartDate && !eventObject.inputStartTime" href class="btn btn-link" (click)="eventObject.inputStartTime='00:00'; $event.preventDefault()">Add start time</a>
+                <input *ngIf="eventObject.inputStartTime" class="form-control" type="time" id="startTime" name="startTime" [(ngModel)]="eventObject.inputStartTime">
+              </div> <!-- form-group start -->
+
+              <div class="form-group col col-md-auto pr-0">
+                <a *ngIf="eventObject.start && !eventObject.end" href class="btn btn-link" (click)="eventObject.end=eventObject.start; $event.preventDefault()">Add end date</a>
+                <label *ngIf="eventObject.end" for="endDate">End</label>
+                <input *ngIf="eventObject.end" class="form-control" type="date" id="endDate" name="endDate" [(ngModel)]="eventObject.inputEndDate">
+              </div>
+              <div *ngIf="eventObject.end" class="form-group col pl-1">
+                <a *ngIf="!eventObject.inputEndTime" href class="btn btn-link" (click)="eventObject.inputEndTime='00:00'; $event.preventDefault()">Add end time</a>
+                <input *ngIf="eventObject.inputEndTime" class="form-control" type="time" id="endTime" name="endTime" [(ngModel)]="eventObject.inputEndTime">
+              </div> <!-- form-group end -->
+
+            </div> <!-- row start & end -->
+
+          </div>
+
+          <div class="col pl-0">
+
+            <div class="form-group">
+              <label for="instructions">Instructions</label>
+              <textarea class="form-control" id="instructions" name="instructions" rows="4" placeholder="instructions for applicants" [(ngModel)]="eventObject.instructions" empty></textarea>
+            </div> <!-- form-group instructions -->
+
+            <div class="form-group">
+              <label for="chiefNotes"><fa name="lock"></fa>Chief notes <small>(visible to editor in chief only)</small></label>
+              <textarea class="form-control" id="chiefNotes" name="chiefNotes" rows="4" placeholder="chief's private notes" [(ngModel)]="eventObject.chiefNotes" empty></textarea>
+            </div> <!-- form-group chiefNotes -->
+
+          </div>
+        </div>
+
+        <div class="button-bar">
+          <button type="button" class="btn btn-primary col-1" (click)="add()" [disabled]="f.invalid">Add</button>
+          <button type="button" class="btn btn-secondary col-1" (click)="cancel()">Cancel</button>
+        </div>
+
+      </form>
+
+<!--
+      <div class="form-group row">
+        <label for="annotation" class="col-1 col-form-label">Annotation</label>
+        <textarea class="form-control" id="annotation" rows="3" [(ngModel)]="eventObject.annotation"></textarea>
+      </div>
+-->
+
+    </template>
+  </ngb-tab>
+
+  <ngb-tab *ngIf="eventObject && eventObject.id" title="Coverage">
+    <template ngbTabContent>
+      <div class="d-flex">
+
+        <ul class="list-group col">
+          <li class="p-2 font-italic list-group-item list-group-item-success">Accreditations</li>
+          <li *ngIf="!eventObject.accreditations || eventObject.accreditations.length == 0" class="list-group-item text-warning p-2">&nbsp;&nbsp;&nbsp;&lt;nobody assigned&gt;</li>
+          <li *ngFor="let acc of eventObject.accreditations; let i = index"
+            (mouseenter)="btnsVisible[i]=true"
+            (mouseleave)="btnsVisible[i]=false"
+            (dblclick)="unassign({index:i,acc:acc})"
+            class="list-group-item list-group-item-action d-flex align-items-center no-pad"
+            title="Double click to unassign">
+            <fa class="p-2" name="{{acc.job=='editor' ? 'pencil-square-o' : 'camera'}}"></fa>
+            <!--i class="fa p-2" [class.fa-pencil-square-o]="acc.job=='editor'" [class.fa-camera]="acc.job=='photo'"></i-->
+            <user-list-item [uid]="acc.uid" class="p-2"></user-list-item>
+
+            <ng-container [ngSwitch]="acc.status">
+              <span *ngSwitchCase="AccStatus.CONFIRMED" class="badge badge-success badge-pill p-2">confirmed</span>
+              <span *ngSwitchCase="AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-success badge-pill p-2">confirmed</span>
+              <span *ngSwitchCase="AccStatus.APPLIED" class="badge badge-info badge-pill p-2">applied</span>
+              <span *ngSwitchCase="AccStatus.REFUSED" class="badge badge-danger badge-pill p-2">refused</span>
+              <span *ngSwitchDefault class="badge badge-default badge-pill p-2">assigned</span>
+            </ng-container>
+
+            <span *ngIf="acc.guestsRequested > 0 && acc.status != AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-default badge-pill p-2">+{{acc.guestsRequested}}</span>
+            <span *ngIf="acc.guestsRequested > 0 && acc.status == AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-warning badge-pill p-2">no guests</span>
+
+            <div *ngIf="btnsVisible[i]" class="ml-auto">
+              <div ngbDropdown class="btn-group" role="group">
+                <button type="button" class="btn btn-link btn-xsm dropdown-toggle-split" ngbDropdownToggle title="Update accreditation status">
+                  <fa name="id-badge"></fa>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <button *ngIf="acc.status != AccStatus.NOT_APPLIED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.NOT_APPLIED)">
+                    <span><fa name="long-arrow-right"></fa>&nbsp;Not applied</span>
+                  </button>
+                  <button *ngIf="acc.status != AccStatus.APPLIED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.APPLIED)">
+                    <span class="text-info"><fa name="long-arrow-right"></fa>&nbsp;Applied</span>
+                  </button>
+                  <button *ngIf="acc.status != AccStatus.CONFIRMED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.CONFIRMED)">
+                    <span class="text-success">
+                      <fa name="long-arrow-right"></fa>&nbsp;Confirmed
+                      <span *ngIf="acc?.guestsRequested > 0" class="badge badge-default badge-pill">+{{acc.guestsRequested}}</span>
+                    </span>
+                  </button>
+                  <button *ngIf="acc.status != AccStatus.CONFIRMED_NO_GUESTS && acc.guestsRequested > 0" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.CONFIRMED_NO_GUESTS)">
+                    <span class="text-success">
+                      <fa name="long-arrow-right"></fa>&nbsp;Confirmed
+                      <span class="badge badge-warning badge-pill">no guests</span>
+                    </span>
+                  </button>
+                  <button *ngIf="acc.status!=AccStatus.REFUSED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.REFUSED)">
+                    <span class="text-danger"><fa name="long-arrow-right"></fa>&nbsp;Refused</span>
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="close text-danger" (click)="unassign({index:i,acc:acc})" title="Unassign">
+                <span>&times;</span>
+              </button>
+            </div>
+          </li>
+        </ul>
+
+        <ul class="col">
+          <li class="p-2 font-italic list-group-item list-group-item-info">Registered editors</li>
+          <li *ngIf="!eventObject.editors || eventObject.editors.length == 0" class="list-group-item text-warning p-2">&nbsp;&nbsp;&nbsp;&lt;no available editors&gt;</li>
+          <li *ngFor="let applcnt of eventObject.editors; let i = index"
+            (mouseenter)="btnsVisible['e'+i]=true"
+            (mouseleave)="btnsVisible['e'+i]=false"
+            (dblclick)="assignEditor({index:i,app:applcnt})"
+            class="list-group-item list-group-item-action d-flex align-items-center no-pad"
+            title="Double click to assign this editor">
+            <fa class="p-2" name="pencil-square-o"></fa>
+            <user-list-item [uid]="applcnt.uid" class="p-2"></user-list-item>
+            <span *ngIf="applcnt.guestsRequested > 0" class="badge badge-default badge-pill p-2">+{{applcnt.guestsRequested}}</span>
+            <button type="button" *ngIf="btnsVisible['e'+i]" class="btn btn-link btn-xsm text-success ml-auto" (click)="assignEditor({index:i,app:applcnt})" title="Assign this editor">
+              <fa name="arrow-left"></fa>
+            </button>
+          </li>
+          <li class="font-italic p-2 list-group-item list-group-item-info">Registered photographers</li>
+          <li *ngIf="!eventObject.photo || eventObject.photo.length == 0" class="list-group-item text-warning p-2">&nbsp;&nbsp;&nbsp;&lt;no available photographers&gt;</li>
+          <li *ngFor="let applcnt of eventObject.photo; let i = index"
+            (mouseenter)="btnsVisible['p'+i]=true"
+            (mouseleave)="btnsVisible['p'+i]=false"
+            (dblclick)="assignPhoto({index:i,app:applcnt})"
+            class="list-group-item list-group-item-action d-flex align-items-center no-pad"
+            title="Double click to assign this photographer">
+            <fa class="p-2" name="camera"></fa>
+            <user-list-item [uid]="applcnt.uid" class="p-2"></user-list-item>
+            <span *ngIf="applcnt.guestsRequested > 0" class="badge badge-default badge-pill p-2">+{{applcnt.guestsRequested}}</span>
+            <button type="button" *ngIf="btnsVisible['p'+i]" class="btn btn-link btn-xsm text-success ml-auto" (click)="assignPhoto({index:i,app:applcnt})" title="Assign this photographer">
+              <fa name="arrow-left"></fa>
+            </button>
+          </li>
+        </ul>
+
+    </div>
+    </template>
+  </ngb-tab>
+
+</ngb-tabset>
+
+<!--button type="button" class="close" (click)="cancel()">&times;</button-->

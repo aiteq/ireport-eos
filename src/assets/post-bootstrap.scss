@@ -1,0 +1,84 @@
+/*
+ * forms
+ */
+
+label {
+  margin-bottom: 0.25rem;
+
+  fa[name="lock"] {
+    color: $yellow;
+  }
+}
+
+/*
+input::-webkit-input-placeholder, input:-moz-placeholder, input::-moz-placeholder, input:-ms-input-placeholder, textarea::-webkit-input-placeholder, textarea:-moz-placeholder, textarea::-moz-placeholder, textarea:-ms-input-placeholder,{
+  color: $gray-lighter !important;
+}
+*/
+
+input.form-control, textarea.form-control {
+  border-left: 5px solid $input-border-color;
+
+  &.ng-valid:not(.empty):not(:focus) {
+    border-left-color: $brand-success;
+  }
+  &.ng-invalid, &.empty:required  {
+    border-left-color: $brand-danger;
+  }
+  &.ng-valid:read-only {
+    border-left-color: $brand-success;
+  }
+}
+
+input[type="date"], input[type="time"], input[type="datetime-local"] {
+  height: $input-height;
+}
+
+.btn-group {
+  &.dropdown {
+    display: flex;
+  }
+  & > div:first-child:not(:last-child) {
+    border-bottom-right-radius: 0;
+    border-top-right-radius: 0;
+    white-space: no-wrap;
+  }
+}
+
+.text-aux {
+  color: #ccc;
+}
+
+/*
+event-inline > button.close {
+  position: absolute;
+  right: $list-group-item-padding-x + 0.5rem;
+  top: $list-group-item-padding-y + 0.25rem;
+}
+*/
+
+event-inline {
+  overflow: hidden;
+
+  input[type="date"] {
+    width: 9.5rem;
+  }
+  input[type="time"] {
+    width: 6.25rem;
+  }
+}
+
+.button-bar {
+  @extend .row;
+  @extend .justify-content-end;
+  padding-top: 1rem;
+  border-top: 1px solid $gray-lighter;
+  button {
+    margin-right: 1rem;
+  }
+}
+
+ngb-tabset .tab-content {
+  padding: $spacer-y $spacer-x;
+}
+
