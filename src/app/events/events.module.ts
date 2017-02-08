@@ -14,6 +14,7 @@ import { EventInlineComponent } from './event-inline.component';
 import { EventFormComponent } from './event-form.component';
 //import { UserNameAsyncPipe } from '../user/user.utilities';
 import { UserListItemComponent } from '../user/user-list-item.component';
+import { UserSelectComponent } from '../user/user-select.component';
 import { EventTypeComponent } from './event-type.component';
 
 @NgModule({
@@ -38,6 +39,7 @@ import { EventTypeComponent } from './event-type.component';
     EventFormComponent,
     EventTypeComponent,
     UserListItemComponent,
+    UserSelectComponent,
   ]
 })
 export class EventsModule { }

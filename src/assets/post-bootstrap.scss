@@ -46,7 +46,20 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 }
 
 .text-aux {
-  color: #ccc;
+  @extend .text-muted;
+  opacity: .65;
+}
+
+.aux-action {
+  @extend .text-muted;
+  cursor: pointer;
+  opacity: .65;
+  &:hover {
+    opacity: 1;
+    -webkit-transition: $transition-fade;
+    -o-transition: $transition-fade;
+    transition: $transition-fade;
+  }
 }
 
 /*

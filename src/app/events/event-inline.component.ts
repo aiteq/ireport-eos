@@ -7,15 +7,13 @@ import { Venue } from '../model/venue.entity';
 import { Accreditation } from '../model/accreditation.entity';
 import { EventTypeComponent } from './event-type.component';
 import { EntityManager, DAO } from '../persistence/persistence';
+import { Utils } from '../shared/utils';
 
 @Component({
   selector: 'event-inline',
   templateUrl: './event-inline.component.html',
 })
 export class EventInlineComponent implements OnChanges, OnDestroy {
-
-  private static readonly REGEXP_ESCAPE = /[\\^$*+?.()|[\]{}]/g;
-  private static readonly toRegExpSafe = (str: string) => str.replace(EventInlineComponent.REGEXP_ESCAPE, '\\$&');
 
   private readonly EventType = CalendarEvent.Type;
   private readonly EventTypeNames = EventTypeComponent.TYPES;
@@ -130,7 +128,7 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
       .debounceTime(200)
       .distinctUntilChanged()
       .map(term => term.length < 2 ? []
-        : (this.importedEvents ? this.importedEvents.filter(ie => new RegExp(EventInlineComponent.toRegExpSafe(term), 'gi').test(ie.title)).splice(0, 10) : []));
+        : (this.importedEvents ? this.importedEvents.filter(ie => new RegExp(Utils.toRegExpSafe(term), 'gi').test(ie.title)).splice(0, 10) : []));
 
   private searchVenues = (text$: Observable<string>) =>
     text$
@@ -138,7 +136,7 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
       .distinctUntilChanged()
       .map(term => term.length < 2 ? []
         : (this.venues ? this.venues.filter(v => {
-          return new RegExp(EventInlineComponent.toRegExpSafe(term), 'gi').test(v.name);
+          return new RegExp(Utils.toRegExpSafe(term), 'gi').test(v.name);
         }).splice(0, 10) : []));
 
   private formatEvent(event: CalendarEvent) {
@@ -150,7 +148,7 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
   }
 
   private highlightTerm(result: string, term: string) {
-    return result.replace(new RegExp(`(${EventInlineComponent.toRegExpSafe(term)})`, 'gi'), `<strong>$1</strong>`);
+    return result.replace(new RegExp(`(${Utils.toRegExpSafe(term)})`, 'gi'), `<strong>$1</strong>`);
   }
 
   private selectImported(event: { item: CalendarEvent }) {
