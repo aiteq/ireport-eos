@@ -40,10 +40,10 @@ export class AngularfireEntityManager extends EntityManager {
   protected save<T extends Manageable>(location: string, entity: T): string {
     if (entity.id) {
       this.db.object(`${location}/${entity.id}`).update(entity);
-      return entity.id;
     } else {
-      return this.db.list(`${location}/`).push(entity).key;
+      entity.id = this.db.list(`${location}/`).push(entity).key;
     }
+    return entity.id;
   }
 
     /*

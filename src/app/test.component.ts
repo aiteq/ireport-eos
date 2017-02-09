@@ -19,11 +19,12 @@ export class TestComponent implements OnInit {
   }
 
   ngOnInit() {
-
+    /*
     this.daox.list().subscribe(xs => {
       console.log(xs.length);
       this.xs = xs;
     });
+    //*/
 
     /*
     this.daox.find('-KcIFhH-y2lhbtnsLqov').subscribe(x => {
@@ -33,13 +34,13 @@ export class TestComponent implements OnInit {
     });
     //*/
 
-    /*
+    //*
     let te = new TestEntityX();
-    te.aaa = 'CCC';
-    te.bbb = 'DDD';
+    te.aaa = 'AAA';
+    te.bbb = 'BBB';
     te.y = new TestEntityY();
-    te.y.ccc = 'yccc';
-    this.daox.save(te);
+    te.y.ccc = 'CCC';
+    this.daox.save(te).subscribe(t => console.log(t));
     //*/
 
 /*
@@ -64,13 +65,13 @@ export class TestComponent implements OnInit {
   }
 }
 
-@Entity('/test/ylist')
+@Entity('/test/y')
 class TestEntityY extends Manageable {
   ccc: string;
   fff: string;
 }
 
-@Entity('/test/xlist')
+@Entity('/test/x')
 class TestEntityX extends Manageable {
   aaa: string;
   bbb: string;

@@ -73,14 +73,12 @@ export abstract class EntityManager {
       }
 
       let emd: EntityManager.EntityMetadata = this.entityType.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
-      return this.em.find<T>(emd.location, emd.cnstrctr, id);
-      //return this.em.find<T>(emd.location, emd.cnstrctr, id).map((entity: T) => this.findProperties(entity, emd.properties));
+      return this.em.find<T>(emd.location, emd.cnstrctr, id).map((entity: T) => this.findProperties(entity, emd.properties));
     }
 
     list(query?: Object): Observable<T[]> {
       let emd: EntityManager.EntityMetadata = this.entityType.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
-      return this.em.list<T>(emd.location, emd.cnstrctr, query);
-      //return this.em.list<T>(emd.location, emd.cnstrctr, query).map((entities: T[]) => entities.map((entity: T) => this.findProperties(entity, emd.properties)));
+      return this.em.list<T>(emd.location, emd.cnstrctr, query).map((entities: T[]) => entities.map((entity: T) => this.findProperties(entity, emd.properties)));
     }
 
     save(entity: T): Observable<T> {
@@ -91,8 +89,8 @@ export abstract class EntityManager {
       return this.find(this._save(entity));
     }
 
-    private _save(entity: Manageable): string {
-      let emd: EntityManager.EntityMetadata = entity[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
+    private _save(entity: Manageable, emd?: EntityManager.EntityMetadata): string {
+      emd = emd || entity[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
       if (!emd) {
         Observable.throw(new Error(`DAO.save: missing entity metadata`));
       }
@@ -101,16 +99,13 @@ export abstract class EntityManager {
         if (key != 'constructor' && key in emd.properties) {
           let pmd: EntityManager.PropertyMetadata = emd.properties[key];
           if (pmd) {
-            if ((entity[key] as Manageable).id) {
-              console.warn('DAO.save: cascade update not supported');
-            } else {
-              (entity[key] as Manageable).id = this._save(entity[key]);
-            }
+            // replace property's value with its id
+            entity[key] = this._save(entity[key], pmd.entityMetadata);
           }
         }
       }
 
-      return this.em.save(emd.location, entity);
+      return this.em.save<Manageable>(emd.location, entity);
     }
 
     public ngOnDestroy() {
