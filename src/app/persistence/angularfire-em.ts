@@ -37,13 +37,23 @@ export class AngularfireEntityManager extends EntityManager {
     return this.db.list(`${location}/`, { query : query }).map((entities: T[]) => entities.map((entity: T) => this.fromDb(entity, constructor)));
   }
 
-  protected save<T extends Manageable>(location: string, entity: T): string {
+  protected save(transaction: EntityManager.Transaction) {
+    let updateData: {} = {};
+    transaction.forEach(item => updateData[`${item.location}/${item.entity.id}`] = item.entity);
+
+    this.db.object('/').update(updateData);
+    /*
     if (entity.id) {
       this.db.object(`${location}/${entity.id}`).update(entity);
     } else {
       entity.id = this.db.list(`${location}/`).push(entity).key;
     }
     return entity.id;
+    */
+  }
+
+  protected generateId<T extends Manageable>(location: string, entity: T): string {
+    return this.db.list(location).push(null).key;
   }
 
     /*

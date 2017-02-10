@@ -34,7 +34,9 @@ export abstract class EntityManager {
 
   protected abstract find<T extends Manageable>(location: string, constructor: { new (...args: any[]): Manageable }, id: string): Observable<T>;
   protected abstract list<T extends Manageable>(location: string, constructor: { new (...args: any[]): Manageable }, query?: Object): Observable<T[]>;
-  protected abstract save<T extends Manageable>(location: string, entity: T): string;
+  protected abstract save(transaction: EntityManager.Transaction): any;
+  protected abstract generateId<T extends Manageable>(location: string, entity: T): string;
+  //protected abstract transaction<T extends Manageable>(location: string, atomic: Function);
 
   public getDao<T extends Manageable>(entityType: Function): DAO<T> {
     let className = entityType.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME].className ||
@@ -86,26 +88,33 @@ export abstract class EntityManager {
         Observable.throw(new Error(`DAO.save: nothing to save`));
       }
 
-      return this.find(this._save(entity));
-    }
-
-    private _save(entity: Manageable, emd?: EntityManager.EntityMetadata): string {
-      emd = emd || entity[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
+      let emd: EntityManager.EntityMetadata = entity[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
       if (!emd) {
         Observable.throw(new Error(`DAO.save: missing entity metadata`));
       }
+
+      this.em.save(this._prepareToSave(entity, emd));
+      return this.find(entity.id);
+    }
+
+    private _prepareToSave(entity: Manageable, emd: EntityManager.EntityMetadata, transaction?: EntityManager.Transaction): EntityManager.Transaction {
+      transaction = transaction || new EntityManager.Transaction();
 
       for (let key in entity) {
         if (key != 'constructor' && key in emd.properties) {
           let pmd: EntityManager.PropertyMetadata = emd.properties[key];
           if (pmd) {
+            transaction = this._prepareToSave(entity[key], pmd.entityMetadata, transaction);
             // replace property's value with its id
-            entity[key] = this._save(entity[key], pmd.entityMetadata);
+            entity[key] = entity[key].id;
           }
         }
       }
 
-      return this.em.save<Manageable>(emd.location, entity);
+      entity.id = entity.id || this.em.generateId(emd.location, entity);
+      transaction.push(new EntityManager.TransactionItem(emd.location, entity));
+
+      return transaction;
     }
 
     public ngOnDestroy() {
@@ -167,5 +176,12 @@ export namespace EntityManager {
     public key: string;
     public className: string;
     public entityMetadata: EntityMetadata;
+  }
+
+  export class Transaction extends Array<TransactionItem> {    
+  }
+
+  export class TransactionItem {
+    constructor(public location: string, public entity: Manageable) {}
   }
 }
