@@ -5,7 +5,8 @@ import { AngularFireModule, FIREBASE_PROVIDERS, AngularFire, AuthMethods, AuthPr
 
 import { AppComponent, PageNotFoundComponent } from './app.component';
 import { TestComponent } from './test.component';
-import { EntityManager } from './persistence/persistence';
+import { EntityManager } from './persistence/entity-manager';
+import { EntityRegistry } from './persistence/entity-registry';
 import { AngularfireEntityManager } from './persistence/angularfire-em';
 import { AuthModule } from './auth/auth.module';
 import { AppRouting } from './app.routing';
@@ -28,7 +29,8 @@ import { firebaseConfig } from './firebase';
     PageNotFoundComponent
   ],
   providers: [
-    { provide: EntityManager, useClass: AngularfireEntityManager }
+    { provide: EntityManager, useClass: AngularfireEntityManager },
+    EntityRegistry
   ],
   bootstrap: [ AppComponent ]
 })

@@ -15,8 +15,7 @@
   <event-inline *ngIf="list.showInlineForm" [@animForm]="list.showInlineForm" (close)="list.showInlineForm = false; activeEvent = $event;" class="list-group-item"></event-inline>
   <ng-container *ngFor="let month of months; let m = index">
     <a href="#" (click)="monthsVisible[m] = !monthsVisible[m]; activeEvent = null; $event.preventDefault();" class="list-group-item list-group-item-info list-group-item-action py-1 px-2 d-flex" [class.greyed-out]="activeEvent">
-      <!--fa class="mr-1" [name]="monthsVisible[m] ? 'caret-down' : 'caret-right'"></fa-->
-      <fa class="mr-1" name="caret-down"></fa>
+      <fa class="mr-1" [name]="monthsVisible[m] ? 'caret-down' : 'caret-right'"></fa>
       <span>{{month.name}}</span>
       <span class="badge badge-default ml-auto">{{month.events.length}}</span>
     </a>

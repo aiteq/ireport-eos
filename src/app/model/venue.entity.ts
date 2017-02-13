@@ -1,6 +1,6 @@
 import { Manageable, Entity } from '../persistence/persistence'
 
-@Entity('/venues')
+//@Entity('/venues')
 export class Venue extends Manageable {
 
   name: string;

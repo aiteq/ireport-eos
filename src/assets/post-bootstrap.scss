@@ -95,3 +95,8 @@ ngb-tabset .tab-content {
   padding: $spacer-y $spacer-x;
 }
 
+user-select {
+  input {
+    width: 100%;
+  }
+}

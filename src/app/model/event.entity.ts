@@ -1,11 +1,12 @@
 import { Moment } from 'Moment';
 import * as moment from 'moment';
 //import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { Manageable, Entity, ManyToOne } from '../persistence/persistence'
-import { Accreditation } from './accreditation.entity'
+import { Manageable, Entity, ManyToOne } from '../persistence/persistence';
+import { Accreditation } from './accreditation.entity';
+import { Application } from './application.entity';
 import { Venue } from './venue.entity';
 
-@Entity('/events')
+//@Entity('/events')
 export class CalendarEvent extends Manageable {
 
   private static readonly INPUT_DATE_FORMAT = 'YYYY-MM-DD';
@@ -20,19 +21,26 @@ export class CalendarEvent extends Manageable {
   title: string;
   start: string; // ISO 8601
   end: string; // ISO 8601
-  @ManyToOne() venue: Venue;
+  //@ManyToOne() venue: Venue;
+  venue: Venue;
   annotation: string;
   chiefNotes: string;
   instructions: string;
 
   createdBy: string;
+
   accreditations: Accreditation[];
   accreditationNotes: string;
+  applications: Application[];
+
+  // TO-DO: remove
   editors: any[];
   photo: any[];
-  className: string;
-  textReportStatus: CalendarEvent.ReportStatus;
-  photoReportStatus: CalendarEvent.ReportStatus;
+
+
+  //className: string;
+  //textReportStatus: CalendarEvent.ReportStatus;
+  //photoReportStatus: CalendarEvent.ReportStatus;
 
   //private _pickedStart: NgbDateStruct;
 
@@ -118,7 +126,7 @@ export class CalendarEvent extends Manageable {
   */
 }
 
-@Entity('/imports/events')
+//@Entity('/imports/events')
 export class ImportedEvent extends Manageable {
   name: string;
 }

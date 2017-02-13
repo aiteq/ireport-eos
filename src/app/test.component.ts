@@ -1,7 +1,7 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, forwardRef } from '@angular/core';
 import { Observable }     from 'rxjs/Observable';
 import { AngularFireDatabase } from 'angularfire2';
-import { EntityManager, DAO, Entity, Manageable, ManyToOne } from './persistence/persistence';
+import { DAO, EntityManager, AbstractEntity, Entity, ManyToOne } from './persistence/index';
 
 @Component({
   selector: 'test',
@@ -19,6 +19,8 @@ export class TestComponent implements OnInit {
   }
 
   ngOnInit() {
+    let x = new TestEntityX();
+    console.log(x);
     /*
     this.daox.list().subscribe(xs => {
       console.log(xs.length);
@@ -27,14 +29,12 @@ export class TestComponent implements OnInit {
     //*/
 
     /*
-    this.daox.find('-KcIFhH-y2lhbtnsLqov').subscribe(x => {
+    this.daox.find('-KcdvwpuWt8_h4VCY0Fm').subscribe(x => {
       console.log(x);
-      x.bbb = 'test';
-      //this.daox.save(x);
     });
     //*/
 
-    //*
+    /*
     let te = new TestEntityX();
     te.aaa = 'AAA';
     te.bbb = 'BBB';
@@ -65,18 +65,17 @@ export class TestComponent implements OnInit {
   }
 }
 
-@Entity('/test/y')
-class TestEntityY extends Manageable {
-  ccc: string;
-  fff: string;
-}
 
 @Entity('/test/x')
-class TestEntityX extends Manageable {
+class TestEntityX extends AbstractEntity {
   aaa: string;
   bbb: string;
-  @ManyToOne()
-  y: TestEntityY;
+  //@ManyToOne(forwardRef(() => TestEntityY))
+  @ManyToOne(() => TestEntityY) y: TestEntityY;
+}
+@Entity('/test/y')
+class TestEntityY extends AbstractEntity {
+  ccc: string;
 }
 
 

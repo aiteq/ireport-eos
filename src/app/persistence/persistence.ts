@@ -1,4 +1,4 @@
-import { OnDestroy } from '@angular/core';
+import { OnDestroy, forwardRef } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import 'core-js/es6';
 
@@ -6,6 +6,7 @@ import 'core-js/es6';
  * @Entity decorator
  */
 export function Entity<T extends Manageable>(location: string) {
+  console.log('entity: ' + location);
   return (target: any) => EntityManager.registerEntity(target, location);
 }
 
@@ -13,6 +14,7 @@ export function Entity<T extends Manageable>(location: string) {
  * @ManyToOne decorator
  */
 export function ManyToOne() {
+  console.log('many to one');
   return (target: any, key: string) => EntityManager.registerProperty(target, key);
 }
 
@@ -41,7 +43,7 @@ export abstract class EntityManager {
   public getDao<T extends Manageable>(entityType: Function): DAO<T> {
     let className = entityType.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME].className ||
       (() => { throw new Error(`Entity type '${(entityType as any).name}' is not manageable`) })();
-      this.daos[className] = new EntityManager.DAOImpl<T>(this, entityType);
+    this.daos[className] = new EntityManager.DAOImpl<T>(this, entityType);
     return this.daos[className] || (this.daos[className] = new EntityManager.DAOImpl<T>(this, entityType));
   }
 
@@ -49,12 +51,25 @@ export abstract class EntityManager {
     private subscriptions: Subscription[] = [];
 
     constructor(private em: EntityManager, private entityType: Function) {
+      console.log('------- dao for ');
+      console.log(entityType.prototype);
       let emd: EntityManager.EntityMetadata = entityType.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
+      console.log(emd)
       for (let prop in emd.properties) {
         if (!emd.properties[prop].entityMetadata) {
+          console.log('..key: ' + emd.properties[prop].key);
+          console.log('..classname: ' + emd.properties[prop].className);
+          console.log(emd.properties[prop].target);
+          let o = new emd.cnstrctr();
+          console.log(o);
+          let r = Reflect.getMetadata("design:type", (o as any).__proto__, emd.properties[prop].key);
+          console.log('..reflect: ');
+          console.log(r);
           emd.properties[prop].entityMetadata = EntityManager.ENTITIES[emd.properties[prop].className];
         }
       }
+      console.log(emd)
+      console.log('--- end ---');
     }
 
     private findProperties(entity: T, properties: { [key: string] : EntityManager.PropertyMetadata }): T {
@@ -62,7 +77,11 @@ export abstract class EntityManager {
         if (key != 'constructor' && key in properties) {
           let pmd: EntityManager.PropertyMetadata = properties[key];
           if (pmd) {
-            this.subscriptions.push(this.em.find(pmd.entityMetadata.location, pmd.entityMetadata.cnstrctr, (entity[key] as any)).subscribe(value => entity[key] = (value as any)));
+            if (pmd.entityMetadata.location) {
+              this.subscriptions.push(this.em.find(pmd.entityMetadata.location, pmd.entityMetadata.cnstrctr, (entity[key] as any)).subscribe(value => entity[key] = (value as any)));
+            } else {
+              entity[key] = Object.assign(new pmd.entityMetadata.cnstrctr(), entity[key]);
+            }
           }
         }
       }
@@ -129,20 +148,33 @@ export abstract class EntityManager {
    *
    */
 
-  public static registerEntity(target: any, location: string) {
+  public static registerEntity(target: any, location: string): any {
     //new target.prototype.constructor() instanceof Manageable || (() => { throw new Error(`Entity '${target.name}' must extend the Manageable class`); })();
     let emd: EntityManager.EntityMetadata = target.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME] ||
       (EntityManager.ENTITIES[target.name] = EntityManager.createEntityMetadata(target, location));
     emd.location = location;
+    return target;
   }
 
   public static registerProperty(target: any, key: string) {
+    console.log('register property _');
+    console.log(target);
+    console.log(key);
     let emd: EntityManager.EntityMetadata = target.constructor.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME] ||
       (EntityManager.ENTITIES[target.constructor.name] = EntityManager.createEntityMetadata(target.constructor, null));
 
     let pmd: EntityManager.PropertyMetadata = new EntityManager.PropertyMetadata();
     pmd.key = key;
-    pmd.className = Reflect.getMetadata("design:type", target, key).name;
+
+    let typemd = Reflect.getMetadata("design:type", target, key);
+    console.log(typemd);
+    if (typemd) {
+      pmd.className = typemd.name;
+      pmd.target = target;
+    } else {
+      console.log('unknown design type, saving target');
+      pmd.target = target;
+    }
     target.constructor.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME].properties[key] = pmd;
   }
 
@@ -176,6 +208,7 @@ export namespace EntityManager {
     public key: string;
     public className: string;
     public entityMetadata: EntityMetadata;
+    public target: any;
   }
 
   export class Transaction extends Array<TransactionItem> {    

@@ -1,58 +1,47 @@
 import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { AngularFireDatabase } from 'angularfire2';
-import { EntityRegistry } from './entity-registry';
-import { EntityManager } from './entity-manager';
-import { AbstractEntity } from './entity';
-
-type AngularfireEntity = {
-  $key: string;
-  $value: string;
-  $exists: boolean;
-};
+import { EntityManager, Manageable, DAO } from './persistence';
 
 @Injectable()
-export class AngularfireEntityManager extends EntityManager {
+export class AngularfireEntityManagerX extends EntityManager {
 
   constructor(private db: AngularFireDatabase) {
     super();
   }
 
-  private fromDb(afEntity: AngularfireEntity): any {
-    console.log('----> CHECK TYPE OF $exists -> change AngularfireEntity interface');
-    console.log(afEntity);
+  private fromDb<T extends Manageable>(dbEntity: any, constructor: { new (...args: any[]): Manageable }): T {
+    let entity: T = Object.assign(new constructor(), dbEntity);
 
     // add id
-    Object.defineProperty(afEntity, 'id', {
-      value: afEntity.$key,
+    Object.defineProperty(entity, 'id', {
+      value: (dbEntity as any).$key,
       writable: false,
       configurable: false,
       enumerable: false
     });
 
     // remove Angularfire's properties
-    delete afEntity.$exists;
-    delete afEntity.$key;
-    delete afEntity.$value;
+    delete (entity as any).$exists;
+    delete (entity as any).$key;
+    delete (entity as any).$value;
 
-    return afEntity;
+    return entity;
   }
 
-  protected find(location: string, id: string): Observable<any> {
-    return this.db.object(`${location}/${id}`).map((afEntity: AngularfireEntity) => this.fromDb(afEntity));
+  protected find<T extends Manageable>(location: string, constructor: { new (...args: any[]): Manageable }, id: string): Observable<T> {
+    return this.db.object(`${location}/${id}`).map((entity: T) => this.fromDb(entity, constructor));
   }
 
-  protected list<E extends AbstractEntity>(location: string, query?: Object): Observable<E[]> {
-    return undefined;//this.db.list(`${location}/`, { query : query }).map((entities: T[]) => entities.map((entity: T) => this.fromDb(entity, constructor)));
+  protected list<T extends Manageable>(location: string, constructor: { new (...args: any[]): Manageable }, query?: Object): Observable<T[]> {
+    return this.db.list(`${location}/`, { query : query }).map((entities: T[]) => entities.map((entity: T) => this.fromDb(entity, constructor)));
   }
 
-  protected save() {
-    /*
+  protected save(transaction: EntityManager.Transaction) {
     let updateData: {} = {};
     transaction.forEach(item => updateData[`${item.location}/${item.entity.id}`] = item.entity);
 
     this.db.object('/').update(updateData);
-    */
     /*
     if (entity.id) {
       this.db.object(`${location}/${entity.id}`).update(entity);
@@ -63,7 +52,7 @@ export class AngularfireEntityManager extends EntityManager {
     */
   }
 
-  protected generateId<E extends AbstractEntity>(location: string, entity: E): string {
+  protected generateId<T extends Manageable>(location: string, entity: T): string {
     return this.db.list(location).push(null).key;
   }
 
