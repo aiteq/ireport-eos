@@ -1,20 +1,22 @@
-import { OnDestroy } from '@angular/core';
 import { Observable, Subscription } from 'rxjs';
 import { DAO } from './dao';
 import { EntityRegistry } from './entity-registry';
+import { EntityMetadata } from './metadata';
 import { AbstractEntity, EntityConstructor, EntityType } from './entity';
+import { AtqEnvFriendly } from '../atq/atq-component';
 
-export abstract class EntityManager {
+export abstract class EntityManager implements AtqEnvFriendly {
 
   private daos: Map<string, DAO<AbstractEntity>> = new Map<string, DAO<AbstractEntity>>();
 
-  protected abstract find(location: string, id: string): Observable<any>;
+  protected abstract find<E extends AbstractEntity>(location: string, id: string): Observable<E>;
   protected abstract list<E extends AbstractEntity>(location: string, query?: Object): Observable<E[]>;
-  protected abstract save<E extends AbstractEntity>(location: string, entity: E): any;
-  //protected abstract save(transaction: EntityManager.Transaction): any;
+  //protected abstract save(location: string, entity: AbstractEntity): any;
+  protected abstract save(td: EntityManager.TransactionData): void;
   protected abstract generateId<T extends AbstractEntity>(location: string, entity: T): string;
 
-  constructor() {}
+
+  constructor(protected entityRegistry: EntityRegistry) {}
 
   getDao<E extends AbstractEntity>(entityType: EntityType): DAO<E> {
 
@@ -27,21 +29,15 @@ export abstract class EntityManager {
     }
   }
 
-  private static DAOImpl = class<E extends AbstractEntity> implements DAO<E>, OnDestroy {
+  private static DAOImpl = class<E extends AbstractEntity> implements DAO<E> {
     
     private subscriptions: Subscription[] = [];
 
     constructor(private em: EntityManager, private entityType: EntityType) {
-      /*
-      let emd: EntityManager.EntityMetadata = entityType.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
-      for (let prop in emd.properties) {
-        if (!emd.properties[prop].entityMetadata) {
-          let o = new emd.cnstrctr();
-          let r = Reflect.getMetadata("design:type", (o as any).__proto__, emd.properties[prop].key);
-          emd.properties[prop].entityMetadata = EntityManager.ENTITIES[emd.properties[prop].className];
-        }
+
+      if (!entityType.__emd.location) {
+        throw new Error(`DAO.constructor: missing storage location for entity '${entityType.name}'. The entity is designed to be a part of a parent entity and stored in its tree.`);
       }
-      */
     }
 
     find(id: string): Observable<E> {
@@ -49,82 +45,110 @@ export abstract class EntityManager {
         Observable.throw(new Error(`DAO.find: missing or invalid 'id' parameter`));
       }
 
-      return this.em.find(this.entityType.__emd.location, id)
-        .map((object: Object) => {
-          return Object.assign(new this.entityType.prototype.constructor(), object);
-        });
-        //.map((entity: E) => this.findProperties(entity, emd.properties));
+      return this.findEntity(id, this.entityType);
     }
 
     list(query?: Object): Observable<E[]> {
-      throw new Error('not implemented');
-      /*
-      let emd: EntityManager.EntityMetadata = this.entityType.prototype[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
-      return this.em.list<T>(emd.location, emd.cnstrctr, query).map((entities: T[]) => entities.map((entity: T) => this.findProperties(entity, emd.properties)));
-      */
+      return this.em.list<E>(this.entityType.__emd.location, query)
+        .map((objects: Object[]) => objects.map((object: Object) => this.resolveEntity(object, this.entityType)));
     }
 
     save(entity: E): Observable<E> {
-      throw new Error('not implemented');
-      /*
+
       if (!entity) {
-        Observable.throw(new Error(`DAO.save: nothing to save`));
+        Observable.throw(new Error('DAO.save: nothing to save'));
       }
 
-      let emd: EntityManager.EntityMetadata = entity[EntityManager.ENTITY_METADATA_PROPERTY_NAME];
-      if (!emd) {
-        Observable.throw(new Error(`DAO.save: missing entity metadata`));
+      if (!entity.getMetadata) {
+        Observable.throw(new Error('DAO.save: entity is not manageable'));
       }
 
-      this.em.save(this._prepareToSave(entity, emd));
+      let emd: EntityMetadata = entity.getMetadata();
+
+      if (!emd.location) {
+        Observable.throw(new Error(`DAO.save: '${entity.constructor.name}' is not intended to save directly`));
+      }
+
+      this.em.save(this.prepareToSave(entity));
       return this.find(entity.id);
-      */
     }
 
-    private findProperties(entity: E, properties: any): E {
-      /*
-      for (let key in entity) {
-        if (key != 'constructor' && key in properties) {
-          let pmd: EntityManager.PropertyMetadata = properties[key];
-          if (pmd) {
-            if (pmd.entityMetadata.location) {
-              this.subscriptions.push(this.em.find(pmd.entityMetadata.location, pmd.entityMetadata.cnstrctr, (entity[key] as any)).subscribe(value => entity[key] = (value as any)));
-            } else {
-              entity[key] = Object.assign(new pmd.entityMetadata.cnstrctr(), entity[key]);
-            }
-          }
+    private findEntity(id: string, entityType: EntityType): Observable<any> {
+
+      return this.em.find<any>(entityType.__emd.location, id)
+        .map((object: Object) => this.resolveEntity(object, entityType));
+    }
+
+    private resolveEntity(object: Object, entityType: EntityType): AbstractEntity {
+
+      // convert the object returned by the underlaying entity manager to entity type
+      let entity: AbstractEntity = Object.assign(new entityType.prototype.constructor(), object);
+
+      // load and convert managed properties
+      entityType.__emd.properties.forEach((propertyType: EntityType, key: string) => {
+
+        if (typeof entity[key] === 'string' && propertyType.__emd.location) {
+
+          // load referred sub-entity
+          this.subscriptions.push(this.findEntity(entity[key], propertyType).subscribe(value => {
+            entity[key] = value;
+          }));
+
+        } else if (typeof entity[key] === 'object') {
+
+          // just convert child object - sub-entity is a part of the parent entity
+          entity[key] = this.resolveEntity(entity[key], propertyType);
         }
-      }
-      */
+
+      });
+
       return entity;
     }
 
-/*
-    private _prepareToSave(entity: Manageable, emd: EntityManager.EntityMetadata, transaction?: EntityManager.Transaction): EntityManager.Transaction {
-      transaction = transaction || new EntityManager.Transaction();
+    private prepareToSave(entity: AbstractEntity, td?: EntityManager.TransactionData): EntityManager.TransactionData {
+
+      td = td || new EntityManager.TransactionData();
 
       for (let key in entity) {
-        if (key != 'constructor' && key in emd.properties) {
-          let pmd: EntityManager.PropertyMetadata = emd.properties[key];
-          if (pmd) {
-            transaction = this._prepareToSave(entity[key], pmd.entityMetadata, transaction);
-            // replace property's value with its id
+
+        let pmd: EntityMetadata = entity[key] && entity[key].getMetadata && entity[key].getMetadata();
+
+        if (typeof entity[key] === 'object' && pmd) {
+
+          // prepare property
+          this.prepareToSave(entity[key], td);
+
+          if (pmd.location) {
+            // replace property's value with its id, if the property is manageable
             entity[key] = entity[key].id;
           }
         }
       }
 
-      entity.id = entity.id || this.em.generateId(emd.location, entity);
-      transaction.push(new EntityManager.TransactionItem(emd.location, entity));
+      let emd: EntityMetadata = entity.getMetadata();
 
-      return transaction;
+      if (emd.location && !entity.id) {
+        entity.id = this.em.generateId(emd.location, entity);
+        td.push(new EntityManager.TransactionElement(emd.location, entity));
+      }
+
+      return td;
     }
-*/
 
-    public ngOnDestroy() {
+    private unsubscribeAll() {
       this.subscriptions.forEach(s => s.unsubscribe());
     }
   }
 
-  protected static Transaction = class extends Array<{ location: string, entity: AbstractEntity}> {}
+  public atqCleanUp() {
+    this.daos.forEach((dao: any) => dao.unsubscribeAll());
+  }
+}
+
+export namespace EntityManager {
+  export class TransactionElement {
+    constructor(public location: string, public entity: AbstractEntity) {}
+  }
+
+  export class TransactionData extends Array<TransactionElement> {}
 }

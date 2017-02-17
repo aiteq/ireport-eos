@@ -8,19 +8,17 @@ import { AbstractEntity } from './entity';
 type AngularfireEntity = {
   $key: string;
   $value: string;
-  $exists: boolean;
+  $exists: any;
 };
 
 @Injectable()
 export class AngularfireEntityManager extends EntityManager {
 
-  constructor(private db: AngularFireDatabase) {
-    super();
+  constructor(protected entityRegistry: EntityRegistry, private db: AngularFireDatabase) {
+    super(entityRegistry);
   }
 
   private fromDb(afEntity: AngularfireEntity): any {
-    console.log('----> CHECK TYPE OF $exists -> change AngularfireEntity interface');
-    console.log(afEntity);
 
     // add id
     Object.defineProperty(afEntity, 'id', {
@@ -38,32 +36,46 @@ export class AngularfireEntityManager extends EntityManager {
     return afEntity;
   }
 
-  protected find(location: string, id: string): Observable<any> {
-    return this.db.object(`${location}/${id}`).map((afEntity: AngularfireEntity) => this.fromDb(afEntity));
+  protected find<E extends AbstractEntity>(location: string, id: string): Observable<E> {
+
+    return this.db.object(`${location}/${id}`)
+      .map((afEntity: AngularfireEntity) => this.fromDb(afEntity));
   }
 
   protected list<E extends AbstractEntity>(location: string, query?: Object): Observable<E[]> {
-    return undefined;//this.db.list(`${location}/`, { query : query }).map((entities: T[]) => entities.map((entity: T) => this.fromDb(entity, constructor)));
+
+    return this.db.list(`${location}/`, { query : query })
+      .map((afEntities: AngularfireEntity[]) => afEntities.map((afEntity: AngularfireEntity) => this.fromDb(afEntity)));
   }
 
-  protected save() {
-    /*
+  /*
+  protected save(location: string, entity: AbstractEntity): string {
+
+    if (entity.id) {
+
+      // update existing
+      this.db.object(`${location}/${entity.id}`).update(entity);
+      return entity.id;
+
+    } else {
+
+      // create new
+      return this.db.list(`${location}/`).push(entity).key;
+
+    }
+  }
+  */
+
+  protected save(td: EntityManager.TransactionData): void {
+
     let updateData: {} = {};
-    transaction.forEach(item => updateData[`${item.location}/${item.entity.id}`] = item.entity);
+    td.forEach((te: EntityManager.TransactionElement) => updateData[`${te.location}/${te.entity.id}`] = te.entity);
 
     this.db.object('/').update(updateData);
-    */
-    /*
-    if (entity.id) {
-      this.db.object(`${location}/${entity.id}`).update(entity);
-    } else {
-      entity.id = this.db.list(`${location}/`).push(entity).key;
-    }
-    return entity.id;
-    */
   }
 
-  protected generateId<E extends AbstractEntity>(location: string, entity: E): string {
+  protected generateId(location: string, entity: AbstractEntity): string {
+
     return this.db.list(location).push(null).key;
   }
 

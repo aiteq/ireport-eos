@@ -1,33 +1,26 @@
-import { Component, OnInit, forwardRef } from '@angular/core';
+import { Component, OnInit, OnDestroy, forwardRef } from '@angular/core';
 import { Observable }     from 'rxjs/Observable';
 import { AngularFireDatabase } from 'angularfire2';
-import { DAO, EntityManager, AbstractEntity, Entity, ManyToOne } from './persistence/index';
+import { DAO, EntityManager, AbstractEntity, Entity, Property } from './persistence/index';
+import { AtqComponent } from './atq/atq-component';
 
 @Component({
   selector: 'test',
   templateUrl: './test.component.html'
 })
-export class TestComponent implements OnInit {
+export class TestComponent extends AtqComponent implements OnInit {
   private daox: DAO<TestEntityX>;
   //private daoy: DAO<TestEntityY>;
   private x: TestEntityX;
   private xs: TestEntityX[] = [];
 
   constructor (private em: EntityManager, private db: AngularFireDatabase) {
+    super();
     this.daox = em.getDao<TestEntityX>(TestEntityX);
     //this.daoy = em.getDao<TestEntityY>(TestEntityY);
   }
 
   ngOnInit() {
-    let x = new TestEntityX();
-    console.log(x);
-    /*
-    this.daox.list().subscribe(xs => {
-      console.log(xs.length);
-      this.xs = xs;
-    });
-    //*/
-
     /*
     this.daox.find('-KcdvwpuWt8_h4VCY0Fm').subscribe(x => {
       console.log(x);
@@ -35,11 +28,21 @@ export class TestComponent implements OnInit {
     //*/
 
     /*
+    this.daox.list().subscribe(xs => {
+      console.log(xs);
+    });
+    //*/
+
+    //*
     let te = new TestEntityX();
-    te.aaa = 'AAA';
-    te.bbb = 'BBB';
+    te.aaa = '2AAA';
+    te.bbb = '2BBB';
     te.y = new TestEntityY();
-    te.y.ccc = 'CCC';
+    te.y.ccc = '2CCC';
+    te.z = new TestEntityZ();
+    te.z.ddd = '2DDD';
+    te.z.y = te.y;
+      //console.log(Object.assign({}, te));
     this.daox.save(te).subscribe(t => console.log(t));
     //*/
 
@@ -70,13 +73,19 @@ export class TestComponent implements OnInit {
 class TestEntityX extends AbstractEntity {
   aaa: string;
   bbb: string;
-  //@ManyToOne(forwardRef(() => TestEntityY))
-  @ManyToOne(() => TestEntityY) y: TestEntityY;
+  @Property(() => TestEntityY) y: TestEntityY;
+  @Property(() => TestEntityZ) z: TestEntityZ;
 }
+
 @Entity('/test/y')
 class TestEntityY extends AbstractEntity {
   ccc: string;
 }
 
+@Entity()
+class TestEntityZ extends AbstractEntity {
+  ddd: string;
+  @Property(() => TestEntityY) y: TestEntityY;
+}
 
 

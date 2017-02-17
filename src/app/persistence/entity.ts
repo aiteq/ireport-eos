@@ -18,6 +18,7 @@ export abstract class AbstractEntity extends ManagedEntity {
   constructor(private data?: any) {
     super();
     this.hydrate(data);
+    delete this.data;
   }
 
   protected hydrate(data: Object) {

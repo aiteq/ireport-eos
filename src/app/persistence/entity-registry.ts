@@ -6,49 +6,69 @@ import { EntityType } from './entity';
 @Injectable()
 export class EntityRegistry {
 
-  private static registry: EntityRegistry = new EntityRegistry();
+  private static store: Map<string, EntityType> = new Map<string, EntityType>();
 
-  static registerEntity(location: string, entityType: EntityType): EntityType {
-    return EntityRegistry.registry.registerEntity(location, entityType);
-  }
+  static registerEntity(entityType: EntityType, location?: string): EntityType {
 
-  static registerManyToOne(entityType: EntityType, key: string, propertyType: EntityType): void {
-    EntityRegistry.registry.registerManyToOne(entityType, key, propertyType);
-  }
-
-  private store: Map<string, EntityType> = new Map<string, EntityType>();
-
-  registerEntity(location: string, entityType: EntityType): EntityType {
-    console.log('registering entity: ' + entityType.name);
-    //let x = new entityType.prototype.constructor();
-    //console.log(x);
-    entityType.__emd = entityType.__emd || new EntityMetadata();
+    entityType.__emd || this.addEntityMetadata(entityType);
+    
     entityType.__emd.location = location;
-    //entityType.__emd.properties.forEach((propertyTypeFn: Function, key: string, properties: Map<string, EntityType>) => entityType.__emd.properties.set(key, propertyTypeFn()));
+
     this.store.set(entityType.name, entityType);
-    console.log(entityType.__emd);
 
     return entityType;
   }
 
-  registerManyToOne(entityType: EntityType, key: string, propertyTypeFn: Function): void {
-    console.log('registering property: ' + key);
-    entityType.__emd = entityType.__emd || new EntityMetadata();
+  static registerProperty(entityType: EntityType, key: string, propertyTypeFn: Function): void {
+
+    entityType.__emd || this.addEntityMetadata(entityType);
+
     entityType.__emd.properties.set(key, propertyTypeFn);
-    console.log(entityType.__emd);
+  }
+
+  private static addEntityMetadata(entityType: EntityType) {
+    Object.defineProperty(entityType, '__emd', {
+      value: new EntityMetadata(),
+      writable: false,
+      configurable: false,
+      enumerable: false
+    });
+  }
+
+  constructor() {
+
+    // initialize all properties metadata for every entity in the registry
+    EntityRegistry.store.forEach((entityType: EntityType) => {
+
+      // for every property
+      entityType.__emd.properties.forEach((typefn: Function, key: string, properties: Map<string, EntityType>) => {
+
+        // obtaining property's type must be deferred here due to unknown order of entities definitions
+        properties.set(key, typefn());
+
+      })
+    });
   }
 
   find(name: string): EntityType {
-    return this.store.get(name);
+    return EntityRegistry.store.get(name);
+  }
+
+  forEach(callback: Function) {
+    return Array.from(EntityRegistry.store.values()).forEach(callback as any);
   }
 }
 
 export class ManagedEntity {
-  /** The metadata associated with the class instance */
-  static __md: EntityMetadata;
 
   static getMetadata(): EntityMetadata {
-    return this.__md;
+    /*
+    if ('__emd' in this) {
+      throw new Error('No entity metadata (' + this.name + ')');
+    }
+    */
+
+    return this['__emd'];
   }
 
   getMetadata(): EntityMetadata {
