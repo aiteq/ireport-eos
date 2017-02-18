@@ -5,7 +5,7 @@ import { FirebaseListObservable } from 'angularfire2';
 import { BehaviorSubject, Subscription } from 'rxjs';
 //import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
 import { CalendarEvent } from '../model/event.entity';
-import { EntityManager, DAO } from '../persistence/persistence'
+import { EntityManager, DAO } from '../atq/persistence'
 import { EventTypeComponent } from './event-type.component';
 
 @Component({

@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, OnDestroy } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { Subscription, Observable } from 'rxjs';
 import { User } from '../model/user.entity';
-import { EntityManager, DAO } from '../persistence/persistence'
+import { EntityManager, DAO } from '../atq/persistence'
 
 @Component({
   selector: 'user-list-item',

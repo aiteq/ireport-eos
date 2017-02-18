@@ -1,7 +1,7 @@
-import { Manageable, Entity } from '../persistence/persistence'
+import { AbstractEntity, Entity } from '../atq/persistence';
 
-//@Entity('/users')
-export class User extends Manageable {
+@Entity('/users')
+export class User extends AbstractEntity {
 
   static readonly ANONYMOUS = new User();
 

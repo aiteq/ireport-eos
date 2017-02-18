@@ -5,9 +5,7 @@ import { AngularFireModule, FIREBASE_PROVIDERS, AngularFire, AuthMethods, AuthPr
 
 import { AppComponent, PageNotFoundComponent } from './app.component';
 import { TestComponent } from './test.component';
-import { EntityManager } from './persistence/entity-manager';
-import { EntityRegistry } from './persistence/entity-registry';
-import { AngularfireEntityManager } from './persistence/angularfire-em';
+import { EntityManager, EntityRegistry, AngularfireEntityManager } from './atq/persistence';
 import { AuthModule } from './auth/auth.module';
 import { AppRouting } from './app.routing';
 import { EventsModule } from './events/events.module';

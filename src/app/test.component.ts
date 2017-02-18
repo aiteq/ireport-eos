@@ -1,7 +1,7 @@
-import { Component, OnInit, OnDestroy, forwardRef } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { Observable }     from 'rxjs/Observable';
 import { AngularFireDatabase } from 'angularfire2';
-import { DAO, EntityManager, AbstractEntity, Entity, Property } from './persistence/index';
+import { DAO, EntityManager, AbstractEntity, Entity, ManyToOne, OneToMany } from './atq/persistence';
 import { AtqComponent } from './atq/atq-component';
 
 @Component({
@@ -21,8 +21,8 @@ export class TestComponent extends AtqComponent implements OnInit {
   }
 
   ngOnInit() {
-    /*
-    this.daox.find('-KcdvwpuWt8_h4VCY0Fm').subscribe(x => {
+    //*
+    this.daox.find('-KdI6RGeIsoEHj6EDvGM').subscribe(x => {
       console.log(x);
     });
     //*/
@@ -33,14 +33,16 @@ export class TestComponent extends AtqComponent implements OnInit {
     });
     //*/
 
-    //*
+    /*
     let te = new TestEntityX();
     te.aaa = '2AAA';
     te.bbb = '2BBB';
     te.y = new TestEntityY();
     te.y.ccc = '2CCC';
+    te.ys = [te.y, new TestEntityY()];
     te.z = new TestEntityZ();
     te.z.ddd = '2DDD';
+    te.zs = [te.z, new TestEntityZ()];
     te.z.y = te.y;
       //console.log(Object.assign({}, te));
     this.daox.save(te).subscribe(t => console.log(t));
@@ -73,8 +75,10 @@ export class TestComponent extends AtqComponent implements OnInit {
 class TestEntityX extends AbstractEntity {
   aaa: string;
   bbb: string;
-  @Property(() => TestEntityY) y: TestEntityY;
-  @Property(() => TestEntityZ) z: TestEntityZ;
+  @ManyToOne(() => TestEntityY) y: TestEntityY;
+  @ManyToOne(() => TestEntityZ) z: TestEntityZ;
+  @OneToMany(() => TestEntityY) ys: TestEntityY[];
+  @OneToMany(() => TestEntityZ) zs: TestEntityZ[];
 }
 
 @Entity('/test/y')
@@ -85,7 +89,7 @@ class TestEntityY extends AbstractEntity {
 @Entity()
 class TestEntityZ extends AbstractEntity {
   ddd: string;
-  @Property(() => TestEntityY) y: TestEntityY;
+  @ManyToOne(() => TestEntityY) y: TestEntityY;
 }
 
 

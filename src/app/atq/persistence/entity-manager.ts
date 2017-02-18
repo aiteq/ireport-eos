@@ -1,16 +1,18 @@
 import { Observable, Subscription } from 'rxjs';
 import { DAO } from './dao';
-import { EntityRegistry } from './entity-registry';
-import { EntityMetadata } from './metadata';
-import { AbstractEntity, EntityConstructor, EntityType } from './entity';
-import { AtqEnvFriendly } from '../atq/atq-component';
+import { EntityRegistry } from './model/entity-registry';
+import { EntityMetadata } from './model/entity-metadata';
+import { AbstractEntity } from './model/abstract-entity';
+import { EntityType } from './model/entity-type';
+import { Relation } from './model/relation';
+import { AtqEnvFriendly } from '../atq-component';
 
 export abstract class EntityManager implements AtqEnvFriendly {
 
   private daos: Map<string, DAO<AbstractEntity>> = new Map<string, DAO<AbstractEntity>>();
 
-  protected abstract find<E extends AbstractEntity>(location: string, id: string): Observable<E>;
-  protected abstract list<E extends AbstractEntity>(location: string, query?: Object): Observable<E[]>;
+  protected abstract find(location: string, id: string): Observable<AbstractEntity>;
+  protected abstract list(location: string, query?: Object): Observable<AbstractEntity[]>;
   //protected abstract save(location: string, entity: AbstractEntity): any;
   protected abstract save(td: EntityManager.TransactionData): void;
   protected abstract generateId<T extends AbstractEntity>(location: string, entity: T): string;
@@ -35,7 +37,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
 
     constructor(private em: EntityManager, private entityType: EntityType) {
 
-      if (!entityType.__emd.location) {
+      if (!entityType.getMetadata().location) {
         throw new Error(`DAO.constructor: missing storage location for entity '${entityType.name}'. The entity is designed to be a part of a parent entity and stored in its tree.`);
       }
     }
@@ -49,7 +51,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
     }
 
     list(query?: Object): Observable<E[]> {
-      return this.em.list<E>(this.entityType.__emd.location, query)
+      return this.em.list(this.entityType.getMetadata().location, query)
         .map((objects: Object[]) => objects.map((object: Object) => this.resolveEntity(object, this.entityType)));
     }
 
@@ -75,7 +77,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
 
     private findEntity(id: string, entityType: EntityType): Observable<any> {
 
-      return this.em.find<any>(entityType.__emd.location, id)
+      return this.em.find(entityType.getMetadata().location, id)
         .map((object: Object) => this.resolveEntity(object, entityType));
     }
 
@@ -85,30 +87,81 @@ export abstract class EntityManager implements AtqEnvFriendly {
       let entity: AbstractEntity = Object.assign(new entityType.prototype.constructor(), object);
 
       // load and convert managed properties
-      entityType.__emd.properties.forEach((propertyType: EntityType, key: string) => {
-
-        if (typeof entity[key] === 'string' && propertyType.__emd.location) {
-
-          // load referred sub-entity
-          this.subscriptions.push(this.findEntity(entity[key], propertyType).subscribe(value => {
-            entity[key] = value;
-          }));
-
-        } else if (typeof entity[key] === 'object') {
-
-          // just convert child object - sub-entity is a part of the parent entity
-          entity[key] = this.resolveEntity(entity[key], propertyType);
-        }
-
-      });
+      entityType.getMetadata().relations.forEach((relation: Relation, key: string) =>
+        this.resolveRelation(entity, key, relation.foreignEntityType));
 
       return entity;
+    }
+
+    private resolveRelation(object: Object, key: string | number, foreignEntityType: EntityType): void {
+
+      if (typeof object[key] === 'string' && foreignEntityType.getMetadata().location) {
+
+        // many-to-one
+        this.subscriptions.push(this.findEntity(object[key], foreignEntityType).subscribe(value => {
+          object[key] = value;
+        }));
+
+      } else if (typeof object[key] === 'object') {
+
+        if (Array.isArray(object[key])) {
+
+          // one-to-many
+          (object[key] as AbstractEntity[]).forEach((item, index) => {
+            this.resolveRelation(object[key], index, foreignEntityType);
+          });
+
+        } else {
+
+          // denormalized property
+          object[key] = this.resolveEntity(object[key], foreignEntityType);
+        }
+      }
     }
 
     private prepareToSave(entity: AbstractEntity, td?: EntityManager.TransactionData): EntityManager.TransactionData {
 
       td = td || new EntityManager.TransactionData();
 
+      let emd: EntityMetadata = entity.getMetadata();
+
+      emd.relations.forEach((relation, key) => {
+
+        if (typeof entity[key] !== 'object') {
+          return;
+        }
+
+        switch (relation.type) {
+
+          case Relation.Type.MANY_TO_ONE:
+
+            // prepare property object to save
+            this.prepareToSave(entity[key], td);
+
+            if (relation.foreignEntityType.getMetadata().location) {
+              // replace property's value with its id, if the property is manageable
+              entity[key] = entity[key].id;
+            }
+
+            break;
+
+          case Relation.Type.ONE_TO_MANY:
+
+            let array: AbstractEntity[] = entity[key];
+
+            array.forEach(item => this.prepareToSave(item, td));
+
+            if (relation.foreignEntityType.getMetadata().location) {
+              entity[key] = array.map(item => {
+                return item.id;
+              });
+            }
+
+            break;
+        }
+      });
+
+      /*
       for (let key in entity) {
 
         let pmd: EntityMetadata = entity[key] && entity[key].getMetadata && entity[key].getMetadata();
@@ -124,8 +177,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
           }
         }
       }
-
-      let emd: EntityMetadata = entity.getMetadata();
+      */
 
       if (emd.location && !entity.id) {
         entity.id = this.em.generateId(emd.location, entity);

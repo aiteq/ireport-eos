@@ -1,13 +1,13 @@
 import { Moment } from 'Moment';
 import * as moment from 'moment';
 //import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { Manageable, Entity, ManyToOne } from '../persistence/persistence';
+import { AbstractEntity, Entity, ManyToOne } from '../atq/persistence';
 import { Accreditation } from './accreditation.entity';
 import { Application } from './application.entity';
 import { Venue } from './venue.entity';
 
-//@Entity('/events')
-export class CalendarEvent extends Manageable {
+@Entity('/events')
+export class CalendarEvent extends AbstractEntity {
 
   private static readonly INPUT_DATE_FORMAT = 'YYYY-MM-DD';
   private static readonly INPUT_TIME_FORMAT = 'HH:mm';
@@ -21,8 +21,7 @@ export class CalendarEvent extends Manageable {
   title: string;
   start: string; // ISO 8601
   end: string; // ISO 8601
-  //@ManyToOne() venue: Venue;
-  venue: Venue;
+  @ManyToOne(() => Venue) venue: Venue;
   annotation: string;
   chiefNotes: string;
   instructions: string;
@@ -126,8 +125,8 @@ export class CalendarEvent extends Manageable {
   */
 }
 
-//@Entity('/imports/events')
-export class ImportedEvent extends Manageable {
+@Entity('/imports/events')
+export class ImportedEvent extends AbstractEntity {
   name: string;
 }
 

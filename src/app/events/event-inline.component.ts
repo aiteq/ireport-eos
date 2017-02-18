@@ -6,7 +6,7 @@ import { User } from '../model/user.entity';
 import { Venue } from '../model/venue.entity';
 import { Accreditation } from '../model/accreditation.entity';
 import { EventTypeComponent } from './event-type.component';
-import { EntityManager, DAO } from '../persistence/persistence';
+import { EntityManager, DAO } from '../atq/persistence';
 import { Utils } from '../shared/utils';
 
 @Component({
@@ -187,7 +187,7 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
 
   private assignEditor(applicant: any) {
     let acc = new Accreditation();
-    acc.uid = applicant.app.uid;
+    acc.user = applicant.app.user;
     acc.status = applicant.app.status || Accreditation.Status.NOT_APPLIED;
     acc.guestsRequested = applicant.app.guestsRequested || 0;
     acc.job = 'editor';
@@ -202,7 +202,7 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
   private assignPhoto(applicant: any) {
     try {
     let acc = new Accreditation();
-    acc.uid = applicant.app.uid;
+    acc.user = applicant.app.user;
     acc.status = applicant.app.status || Accreditation.Status.NOT_APPLIED;
     acc.guestsRequested = applicant.app.guestsRequested || 0;
     acc.job = 'photo';

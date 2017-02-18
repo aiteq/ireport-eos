@@ -1,11 +1,4 @@
-import { ManagedEntity } from './entity-registry';
-import { EntityMetadata } from './metadata';
-
-export type EntityConstructor<E extends AbstractEntity> = { new (...args: any[]): E };
-
-export interface EntityType extends Function {
-  __emd?: EntityMetadata;
-}
+import { ManagedEntity } from './managed-entity';
 
 /**
  * Common abstract class that **all** entities must extend from. Provides common interfaces for other
@@ -30,13 +23,3 @@ export abstract class AbstractEntity extends ManagedEntity {
     return this;
   }
 }
-
-/*
-export interface EntityConstructor<E extends AbstractEntity> {
-  constructor: EntityConstructor<E>;
-}
-
-export interface EntityStatic<E extends AbstractEntity> {
-
-}
-*/

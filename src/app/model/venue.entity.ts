@@ -1,7 +1,7 @@
-import { Manageable, Entity } from '../persistence/persistence'
+import { AbstractEntity, Entity } from '../atq/persistence';
 
-//@Entity('/venues')
-export class Venue extends Manageable {
+@Entity('/venues')
+export class Venue extends AbstractEntity {
 
   name: string;
   city: string;

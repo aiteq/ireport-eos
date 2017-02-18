@@ -1,5 +1,5 @@
 import { Observable } from 'rxjs';
-import { AbstractEntity } from './entity'
+import { AbstractEntity } from './model/abstract-entity'
 import { EntityManager } from './entity-manager';
 
 export interface DAO<E extends AbstractEntity> {

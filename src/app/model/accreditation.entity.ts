@@ -1,8 +1,10 @@
-import { Manageable } from '../persistence/persistence'
+import { AbstractEntity, Entity, ManyToOne } from '../atq/persistence';
+import { User } from './user.entity'
 
-export class Accreditation extends Manageable {
+@Entity()
+export class Accreditation extends AbstractEntity {
 
-  uid: string;
+  @ManyToOne(() => User) user: User;
   status: Accreditation.Status;
   job: string;
   guestsRequested: number;

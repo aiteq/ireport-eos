@@ -1,8 +1,10 @@
-import { Manageable, ManyToOne } from '../persistence/persistence'
+import { AbstractEntity, Entity, ManyToOne } from '../atq/persistence';
 import { User } from './user.entity';
 
-export class Application extends Manageable {
-  @ManyToOne() user: User;
+@Entity()
+export class Application extends AbstractEntity {
+
+  @ManyToOne(() => User) user: User;
   job: Application.Job;
   guestsRequested: number;
   guestsConfirmed: number;

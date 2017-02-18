@@ -7,7 +7,7 @@ import * as moment from 'moment';
 import { CalendarEvent, ImportedEvent } from '../model/event.entity';
 import { User } from '../model/user.entity';
 import { Accreditation } from '../model/accreditation.entity';
-import { EntityManager, DAO } from '../persistence/persistence';
+import { EntityManager, DAO } from '../atq/persistence';
 
 @Component({
   providers: [
