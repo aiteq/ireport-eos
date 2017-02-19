@@ -6,6 +6,7 @@ import { EntityManager } from '../entity-manager';
 import { AbstractEntity } from '../model/abstract-entity';
 
 type AngularfireEntity = {
+  id: string;
   $key: string;
   $value: string;
   $exists: any;
@@ -21,12 +22,7 @@ export class AngularfireEntityManager extends EntityManager {
   private fromDb(afEntity: AngularfireEntity): any {
 
     // add id
-    Object.defineProperty(afEntity, 'id', {
-      value: afEntity.$key,
-      writable: false,
-      configurable: false,
-      enumerable: false
-    });
+    afEntity.id = afEntity.$key;
 
     // remove Angularfire's properties
     delete afEntity.$exists;
@@ -36,13 +32,13 @@ export class AngularfireEntityManager extends EntityManager {
     return afEntity;
   }
 
-  protected find(location: string, id: string): Observable<AbstractEntity> {
+  protected find(location: string, id: string): Observable<Object> {
 
     return this.db.object(`${location}/${id}`)
       .map((afEntity: AngularfireEntity) => this.fromDb(afEntity));
   }
 
-  protected list(location: string, query?: Object): Observable<AbstractEntity[]> {
+  protected list(location: string, query?: Object): Observable<Object[]> {
 
     return this.db.list(`${location}/`, { query : query })
       .map((afEntities: AngularfireEntity[]) => afEntities.map((afEntity: AngularfireEntity) => this.fromDb(afEntity)));

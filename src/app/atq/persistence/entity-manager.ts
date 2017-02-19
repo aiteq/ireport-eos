@@ -11,8 +11,8 @@ export abstract class EntityManager implements AtqEnvFriendly {
 
   private daos: Map<string, DAO<AbstractEntity>> = new Map<string, DAO<AbstractEntity>>();
 
-  protected abstract find(location: string, id: string): Observable<AbstractEntity>;
-  protected abstract list(location: string, query?: Object): Observable<AbstractEntity[]>;
+  protected abstract find(location: string, id: string): Observable<Object>;
+  protected abstract list(location: string, query?: Object): Observable<Object[]>;
   //protected abstract save(location: string, entity: AbstractEntity): any;
   protected abstract save(td: EntityManager.TransactionData): void;
   protected abstract generateId<T extends AbstractEntity>(location: string, entity: T): string;
@@ -85,6 +85,11 @@ export abstract class EntityManager implements AtqEnvFriendly {
 
       // convert the object returned by the underlaying entity manager to entity type
       let entity: AbstractEntity = Object.assign(new entityType.prototype.constructor(), object);
+      Object.defineProperty(entity, 'id', {
+        writable: false,
+        configurable: false,
+        enumerable: true
+      });
 
       // load and convert managed properties
       entityType.getMetadata().relations.forEach((relation: Relation, key: string) =>

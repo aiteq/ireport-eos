@@ -14,14 +14,14 @@
   </div>
   <event-inline *ngIf="list.showInlineForm" [@animForm]="list.showInlineForm" (close)="list.showInlineForm = false; activeEvent = $event;" class="list-group-item"></event-inline>
   <ng-container *ngFor="let month of months; let m = index">
-    <a href="#" (click)="monthsVisible[m] = !monthsVisible[m]; activeEvent = null; $event.preventDefault();" class="list-group-item list-group-item-info list-group-item-action py-1 px-2 d-flex" [class.greyed-out]="activeEvent">
+    <a href="#" (click)="$event.preventDefault();monthsVisible[m] = !monthsVisible[m]; activeEvent = null;" class="list-group-item list-group-item-info list-group-item-action py-1 px-2 d-flex" [class.greyed-out]="activeEvent">
       <fa class="mr-1" [name]="monthsVisible[m] ? 'caret-down' : 'caret-right'"></fa>
       <span>{{month.name}}</span>
       <span class="badge badge-default ml-auto">{{month.events.length}}</span>
     </a>
     <ng-container *ngIf="monthsVisible[m]">
       <ng-container *ngFor="let event of month.events" >
-        <a href="#" (click)="activeEvent = activeEvent ? null : event.id; $event.preventDefault();" class="list-group-item list-group-item-action py-1 px-2" [class.active]="activeEvent == event.id" [class.greyed-out]="activeEvent && activeEvent != event.id" style="white-space: nowrap">
+        <a href="#" (click)="$event.preventDefault(); activeEvent = activeEvent ? null : event.id;" class="list-group-item list-group-item-action py-1 px-2" [class.active]="activeEvent == event.id" [class.greyed-out]="activeEvent && activeEvent != event.id" style="white-space: nowrap">
           <event-type [type]="event.type"></event-type>
           <div class="ml-2" style="">
             {{(event.start | amDateFormat:'D. M.')}}

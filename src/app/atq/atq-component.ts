@@ -4,7 +4,7 @@ export interface AtqEnvFriendly {
   atqCleanUp(): void;
 }
 
-abstract class AtqEnvFriendlyComponent implements OnDestroy {
+abstract class AtqEnvFriendlyComponent implements AtqEnvFriendly, OnDestroy {
 
   constructor() {
     let origOnDestroyHandler = this.ngOnDestroy;
@@ -17,15 +17,21 @@ abstract class AtqEnvFriendlyComponent implements OnDestroy {
 
   ngOnDestroy(): void {}
 
+  log(message: string): void {
+    console.log(message);
+  }
+
+  atqCleanUp(): void {}
+
   private cleanUpAll(): void {
     Object.values(this).forEach(trash => {
       if ('atqCleanUp' in trash) {
         (<AtqEnvFriendly>trash).atqCleanUp();
       }
     });
+
+    this.atqCleanUp();
   }
 }
 
-export class AtqComponent extends AtqEnvFriendlyComponent {
-  
-}
+export class AtqComponent extends AtqEnvFriendlyComponent {}

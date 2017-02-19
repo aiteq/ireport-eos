@@ -105,24 +105,6 @@ export class CalendarEvent extends AbstractEntity {
       }
     }
   }
-
-  /*
-  get pickedStart(): NgbDateStruct {
-    return this._start ? 
-      (this._pickedStart ? this._pickedStart : {
-        year: this._start.year(),
-        month: this._start.month() + 1,
-        day: this._start.date()
-      }) : null;
-  }
-
-  set pickedStart(picked: NgbDateStruct) {
-    if (picked) {
-      this._pickedStart = picked;
-      this._start = moment([picked.year, picked.month - 1, picked.day]);
-    }
-  }
-  */
 }
 
 @Entity('/imports/events')

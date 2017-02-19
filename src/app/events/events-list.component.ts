@@ -1,9 +1,10 @@
-import { Component, Input, OnChanges, OnInit, OnDestroy, SimpleChanges, style, state, animate, transition, trigger } from '@angular/core';
+import { Component, Input, OnInit, SimpleChanges, style, state, animate, transition, trigger } from '@angular/core';
 import { Moment } from 'Moment';
 import * as moment from 'moment';
 import { FirebaseListObservable } from 'angularfire2';
 import { BehaviorSubject, Subscription } from 'rxjs';
 //import { NgbModal, ModalDismissReasons } from '@ng-bootstrap/ng-bootstrap';
+import { AtqComponent } from '../atq/atq-component';
 import { CalendarEvent } from '../model/event.entity';
 import { EntityManager, DAO } from '../atq/persistence'
 import { EventTypeComponent } from './event-type.component';
@@ -25,7 +26,7 @@ import { EventTypeComponent } from './event-type.component';
     ])
   ]
 })
-export class EventsListComponent implements OnChanges, OnInit, OnDestroy {
+export class EventsListComponent extends AtqComponent implements OnInit {
 
   private year: number = moment().year();
 
@@ -37,18 +38,9 @@ export class EventsListComponent implements OnChanges, OnInit, OnDestroy {
   private activeEvent: string;
   private EventType = CalendarEvent.Type;
 
-  constructor(private em: EntityManager/*, private modalService: NgbModal*/) {
+  constructor(private em: EntityManager) {
+    super();
   }
-
-  /*
-  addEvent(content: any) {
-    this.modalService.open(content, { size: 'lg' }).result.then((result) => {
-      console.log(`Closed with: ${result}`);
-    }, (reason) => {
-      console.log(`Dismissed ${reason}`);
-    });
-  }
-  */
 
   ngOnInit() {
     this.dao = this.em.getDao<CalendarEvent>(CalendarEvent);
@@ -69,18 +61,12 @@ export class EventsListComponent implements OnChanges, OnInit, OnDestroy {
         orderByChild: 'start',
         startAt: start.format(),
         endAt: end.format()
-      }).subscribe(events => {
-        //console.log(m + ': ' + events.length);
-        this.months[m].events = events;
-      });
+      }).subscribe(events => this.months[m].events = events);
       //*/
     }
   }
 
-  ngOnChanges(changes:  any) {
-  }
-
-  ngOnDestroy() {
+  atqCleanUp() {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 }
