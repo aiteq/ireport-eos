@@ -11,6 +11,8 @@ $ctx-color-movie: inherit;
 $ctx-color-shooting: inherit;
 $ctx-color-other: inherit;
 
+$ctx-color-active: inherit;
+
 fa i.fa-music {
   color: $ctx-color-concert;
 }
@@ -36,3 +38,6 @@ fa i.fa-calendar-o {
   color: $ctx-color-other;
 }
 
+.list-group-item.active fa i {
+  color: $ctx-color-active !important;
+}

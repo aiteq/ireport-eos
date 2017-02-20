@@ -1,12 +1,17 @@
 <template #rtUser let-r="result" let-t="term">
   <span [innerHtml]="highlightTerm(r.name, t)"></span>
 </template>
+<label for="{{elementId}}">
+  <fa name="plus"></fa>
+</label>
 <input
   type="text"
-  class=""
+  id="{{elementId}}"
   placeholder="start typing to search for user"
   [ngModel]="user"
   [ngbTypeahead]="searchUsers"
   [resultTemplate]="rtUser"
   [inputFormatter]="formatUser"
+  (selectItem)="selectUser.emit($event)"
 />
+<fa name="users"></fa>

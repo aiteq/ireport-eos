@@ -15,8 +15,7 @@
             class="list-group-item list-group-item-action d-flex align-items-center no-pad"
             title="Double click to unassign">
             <fa class="p-2" name="{{acc.job=='editor' ? 'pencil-square-o' : 'camera'}}"></fa>
-            <!--i class="fa p-2" [class.fa-pencil-square-o]="acc.job=='editor'" [class.fa-camera]="acc.job=='photo'"></i-->
-            <user-list-item [uid]="acc.uid" class="p-2"></user-list-item>
+            <!--user-list-item [user]="acc.user" class="p-2"></user-list-item-->
 
             <ng-container [ngSwitch]="acc.status">
               <span *ngSwitchCase="AccStatus.CONFIRMED" class="badge badge-success badge-pill p-2">confirmed</span>
@@ -67,25 +66,24 @@
 
         <ul class="col">
           <li class="p-2 font-italic list-group-item list-group-item-info">Registered editors</li>
-          <li *ngIf="!eventObject.editors || eventObject.editors.length == 0" class="list-group-item p-2">
-            <!--div class="aux-action"><fa name="plus"></fa> add editor</div-->
-            <user-select></user-select>
-          </li>
-          <li *ngFor="let applcnt of eventObject.editors; let i = index"
+          <li *ngFor="let app of eventObject.applications; let i = index"
             (mouseenter)="btnsVisible['e'+i]=true"
             (mouseleave)="btnsVisible['e'+i]=false"
-            (dblclick)="assignEditor({index:i,app:applcnt})"
+            (dblclick)="assignEditor({index:i,app:app})"
             class="list-group-item list-group-item-action d-flex align-items-center no-pad"
-            title="Double click to assign this editor">
+            title="Double click to assign">
             <fa class="p-2" name="pencil-square-o"></fa>
-            <user-list-item [uid]="applcnt.uid" class="p-2"></user-list-item>
-            <span *ngIf="applcnt.guestsRequested > 0" class="badge badge-default badge-pill p-2">+{{applcnt.guestsRequested}}</span>
-            <button type="button" *ngIf="btnsVisible['e'+i]" class="btn btn-link btn-xsm text-success ml-auto" (click)="assignEditor({index:i,app:applcnt})" title="Assign this editor">
+            <user-list-item [user]="app.user" class="p-2"></user-list-item>
+            <span *ngIf="app.guestsRequested > 0" class="badge badge-default badge-pill p-2">+{{app.guestsRequested}}</span>
+            <button type="button" *ngIf="btnsVisible['e'+i]" class="btn btn-link btn-xsm text-success ml-auto" (click)="assignEditor({index:i,app:app})" title="Assign">
               <fa name="arrow-left"></fa>
             </button>
           </li>
+          <li class="list-group-item p-2">
+            <user-select (selectUser)="applyEditor($event.item)"></user-select>
+          </li>
 
-          <li class="font-italic p-2 list-group-item list-group-item-info">Registered photographers</li>
+          <!--li class="font-italic p-2 list-group-item list-group-item-info">Registered photographers</li>
           <li *ngIf="!eventObject.photo || eventObject.photo.length == 0" class="list-group-item text-warning p-2">&nbsp;&nbsp;&nbsp;&lt;no available photographers&gt;</li>
           <li *ngFor="let applcnt of eventObject.photo; let i = index"
             (mouseenter)="btnsVisible['p'+i]=true"
@@ -99,7 +97,7 @@
             <button type="button" *ngIf="btnsVisible['p'+i]" class="btn btn-link btn-xsm text-success ml-auto" (click)="assignPhoto({index:i,app:applcnt})" title="Assign this photographer">
               <fa name="arrow-left"></fa>
             </button>
-          </li>
+          </li-->
         </ul>
 
     </div>
@@ -140,7 +138,7 @@
                   <spinner *ngIf="!importedEvents && !eventObject.id" title="loading imported events"></spinner>
                 </div>
                 <ng-container *ngIf="eventObject.id">
-                  <input type="text" id="eventName" name="title" class="form-control" [ngModel]="eventObject" required focus empty="title"/>
+                  <input type="text" id="eventName" name="title" class="form-control" [ngModel]="eventObject.title" required focus empty/>
                 </ng-container>
                 <ng-container *ngIf="!eventObject.id">
                   <template #rtEvent let-r="result" let-t="term">
@@ -240,13 +238,6 @@
         </div>
 
       </form>
-
-<!--
-      <div class="form-group row">
-        <label for="annotation" class="col-1 col-form-label">Annotation</label>
-        <textarea class="form-control" id="annotation" rows="3" [(ngModel)]="eventObject.annotation"></textarea>
-      </div>
--->
 
     </template>
   </ngb-tab>

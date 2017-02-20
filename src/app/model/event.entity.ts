@@ -30,7 +30,7 @@ export class CalendarEvent extends AbstractEntity {
 
   accreditations: Accreditation[];
   accreditationNotes: string;
-  applications: Application[];
+  applications: Application[] = [];
 
   // TO-DO: remove
   editors: any[];

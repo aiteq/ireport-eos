@@ -49,7 +49,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
   @extend .text-muted;
   opacity: .65;
 }
-
+/*
 .aux-action {
   @extend .text-muted;
   cursor: pointer;
@@ -61,6 +61,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
     transition: $transition-fade;
   }
 }
+*/
 
 /*
 event-inline > button.close {
@@ -71,7 +72,7 @@ event-inline > button.close {
 */
 
 event-inline {
-  overflow: hidden;
+  /*overflow: hidden;*/
 
   input[type="date"] {
     width: 9.5rem;
@@ -96,7 +97,16 @@ ngb-tabset .tab-content {
 }
 
 user-select {
+  @extend .d-flex;
+  @extend .align-items-center;
+  label {
+    margin: 0;
+  }
+  fa {
+    @extend .text-muted;
+  }
   input {
-    width: 100%;
+    @extend .mx-2;
+    width: 12rem;
   }
 }

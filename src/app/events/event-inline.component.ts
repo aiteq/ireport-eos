@@ -1,9 +1,9 @@
-import { Component, Input, Output, OnInit, OnChanges, OnDestroy, EventEmitter } from '@angular/core';
+import { Component, Input, Output, OnInit, OnChanges, EventEmitter } from '@angular/core';
 import { Subscription, Observable } from 'rxjs';
 import { FirebaseObjectObservable } from 'angularfire2';
+import { AtqComponent } from '../atq/atq-component';
 import { CalendarEvent, ImportedEvent } from '../model/event.entity'
-import { User } from '../model/user.entity';
-import { Venue } from '../model/venue.entity';
+import { Application, User, Venue } from '../model/index';
 import { Accreditation } from '../model/accreditation.entity';
 import { EventTypeComponent } from './event-type.component';
 import { EntityManager, DAO } from '../atq/persistence';
@@ -13,7 +13,7 @@ import { Utils } from '../shared/utils';
   selector: 'event-inline',
   templateUrl: './event-inline.component.html',
 })
-export class EventInlineComponent implements OnChanges, OnDestroy {
+export class EventInlineComponent extends AtqComponent implements OnChanges {
 
   private readonly EventType = CalendarEvent.Type;
   private readonly EventTypeNames = EventTypeComponent.TYPES;
@@ -38,7 +38,9 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
 
   @Output() close: EventEmitter<any> = new EventEmitter<any>();
 
-  constructor(private em: EntityManager) {}
+  constructor(private em: EntityManager) {
+    super();
+  }
 
   test = (pl: any) => console.log(pl);
 
@@ -115,7 +117,7 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
     }
   }
 
-  ngOnDestroy() {
+  atqCleanUp() {
     this.subscriptions.forEach(s => s.unsubscribe());
   }
 
@@ -225,5 +227,12 @@ export class EventInlineComponent implements OnChanges, OnDestroy {
   private checkPhoto(): boolean {
     return (!this.eventObject.photo || this.eventObject.photo.length == 0) &&
       (!this.eventObject.accreditations || this.eventObject.accreditations.filter(acc => acc.job == 'photo').length == 0);
+  }
+
+  private applyEditor(user: User) {
+    let application: Application = new Application();
+    application.job = Application.Job.EDITOR;
+    application.user = user;
+    this.eventObject.applications.push(application);
   }
 }

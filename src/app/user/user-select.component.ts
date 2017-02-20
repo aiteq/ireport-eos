@@ -1,6 +1,7 @@
-import { Component, Input, OnChanges, OnDestroy, OnInit } from '@angular/core';
+import { Component, Input, Output, OnChanges, OnInit, EventEmitter } from '@angular/core';
 import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { Subscription, Observable } from 'rxjs';
+import { AtqComponent } from '../atq/atq-component';
 import { User } from '../model/user.entity';
 import { EntityManager, DAO } from '../atq/persistence'
 import { Utils } from '../shared/utils';
@@ -9,7 +10,13 @@ import { Utils } from '../shared/utils';
   selector: 'user-select',
   templateUrl: './user-select.component.html',
 })
-export class UserSelectComponent implements OnInit, OnChanges, OnDestroy {
+export class UserSelectComponent extends AtqComponent implements OnInit, OnChanges {
+
+  @Output() selectUser: EventEmitter<any> = new EventEmitter<any>();
+
+  private static counter: number = 0;
+  private elementId: string = 'userSelect' + (UserSelectComponent.counter++);
+
   private dao: DAO<User>;
   private user: User;
   //private user$: Observable<User>;
@@ -18,7 +25,9 @@ export class UserSelectComponent implements OnInit, OnChanges, OnDestroy {
   private users: User[];
   private highlightTerm = Utils.highlightTerm;
 
-  constructor(private em: EntityManager, private sanitizer: DomSanitizer) {}
+  constructor(private em: EntityManager, private sanitizer: DomSanitizer) {
+    super();
+  }
 
   ngOnInit() {
     this.dao = this.em.getDao<User>(User);
@@ -47,7 +56,7 @@ export class UserSelectComponent implements OnInit, OnChanges, OnDestroy {
     */
   }
 
-  ngOnDestroy() {
+  atqCleanUp() {
     this.subscription && this.subscription.unsubscribe();
   }
 
