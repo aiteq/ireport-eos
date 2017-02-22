@@ -152,7 +152,7 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
   }
 
   private highlightTerm(result: string, term: string) {
-    return result.replace(new RegExp(`(${Utils.toRegExpSafe(term)})`, 'gi'), `<strong>$1</strong>`);
+    return Utils.highlightTerm(result, term);
   }
 
   private selectImported(event: { item: CalendarEvent }) {
@@ -204,7 +204,6 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     let reg: Registration = new Registration();
     reg.job = Registration.Job.EDITOR;
     reg.user = user;
-    reg.guestsRequested = 1;
     this.eventObject.registrations.push(reg);
   }
 

@@ -1,5 +1,8 @@
 <template #rtUser let-r="result" let-t="term">
-  <span [innerHtml]="highlightTerm(r.name, t)"></span>
+  <div class="d-flex align-items-center px-3">
+    <div class="user-photo mr-2" [style]="safeStyle(r.urlPhoto)"></div>
+    <span [innerHtml]="highlightTerm(r.name, t)"></span>
+  </div>
 </template>
 <fa *ngIf="!inputVisible" name="plus" (click)="inputVisible = true"></fa>
 <input

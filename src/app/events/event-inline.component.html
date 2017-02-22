@@ -169,7 +169,7 @@
           <li *ngFor="let reg of eventObject.unassignedPhotographers; let i = index"
             (mouseenter)="btnsVisible['p'+i]=true"
             (mouseleave)="btnsVisible['p'+i]=false"
-            (dblclick)="assignApplicant(app)"
+            (dblclick)="assign(reg)"
             class="coverage-list-item list-group-item list-group-item-action d-flex align-items-center"
             title="Double click to assign this photorapher for accreditation">
             <user-list-item [user]="reg.user"></user-list-item>

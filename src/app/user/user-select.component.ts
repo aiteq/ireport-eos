@@ -65,6 +65,10 @@ export class UserSelectComponent extends AtqComponent implements OnInit, OnChang
     this.subscription && this.subscription.unsubscribe();
   }
 
+  private safeStyle(url: string): SafeStyle {
+    return this.sanitizer.bypassSecurityTrustStyle(`background-image:url(${url})`);
+  }
+
   private searchUsers = (text$: Observable<string>) =>
     text$
       .debounceTime(200)
