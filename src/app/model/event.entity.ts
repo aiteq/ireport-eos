@@ -3,7 +3,7 @@ import * as moment from 'moment';
 //import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
 import { AbstractEntity, Entity, ManyToOne } from '../atq/persistence';
 import { Accreditation } from './accreditation.entity';
-import { Application } from './application.entity';
+import { Registration } from './registration.entity';
 import { Venue } from './venue.entity';
 
 @Entity('/events')
@@ -28,9 +28,9 @@ export class CalendarEvent extends AbstractEntity {
 
   createdBy: string;
 
-  accreditations: Accreditation[];
+  accreditations: Accreditation[] = [];
   accreditationNotes: string;
-  applications: Application[] = [];
+  registrations: Registration[] = [];
 
   // TO-DO: remove
   editors: any[];
@@ -48,12 +48,12 @@ export class CalendarEvent extends AbstractEntity {
     this.venue = new Venue();
   }
 
-  get appliedEditors(): Application[] {
-    return this.applications.filter(app => app.job == Application.Job.EDITOR);
+  get unassignedEditors(): Registration[] {
+    return this.registrations.filter(reg => reg.job == Registration.Job.EDITOR && reg.status == Registration.Status.UNASSIGNED);
   }
 
-  get appliedPhotographers(): Application[] {
-    return this.applications.filter(app => app.job == Application.Job.PHOTOGRAPHER);
+  get unassignedPhotographers(): Registration[] {
+    return this.registrations.filter(reg => reg.job == Registration.Job.PHOTOGRAPHER && reg.status == Registration.Status.UNASSIGNED);
   }
 
   get inputStartDate(): string {

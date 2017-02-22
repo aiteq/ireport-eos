@@ -1,4 +1,3 @@
-        {{eventObject | json}}
 <ngb-tabset class="w-100">
 
   <ngb-tab *ngIf="eventObject && eventObject.id" title="Coverage">
@@ -6,144 +5,188 @@
       <div class="d-flex">
 
         <ul class="list-group col">
-          <li class="p-2 font-italic list-group-item list-group-item-success">Accreditations</li>
-          <li *ngIf="!eventObject.accreditations || eventObject.accreditations.length == 0" class="list-group-item text-warning p-2">&nbsp;&nbsp;&nbsp;&lt;nobody assigned&gt;</li>
-          <li *ngFor="let acc of eventObject.accreditations; let i = index"
-            (mouseenter)="btnsVisible[i]=true"
-            (mouseleave)="btnsVisible[i]=false"
-            (dblclick)="unassign({index:i,acc:acc})"
-            class="list-group-item list-group-item-action d-flex align-items-center no-pad"
-            title="Double click to unassign">
-            <fa class="p-2" name="{{acc.job=='editor' ? 'pencil-square-o' : 'camera'}}"></fa>
-            <!--user-list-item [user]="acc.user" class="p-2"></user-list-item-->
+
+          <li class="coverage-list-header list-group-item list-group-item-success d-flex align-items-center">
+            <fa name="pencil-square-o"></fa>
+            <span>Editors</span>
+          </li>
+          <li *ngIf="!getAccreditations(AccJob.EDITOR).length" class="coverage-list-item list-group-item text-warning">&lt;no editors assigned&gt;</li>
+          <li *ngFor="let acc of getAccreditations(AccJob.EDITOR); let i = index"
+            (mouseenter)="btnsVisible['ae'+i] = true"
+            (mouseleave)="btnsVisible['ae'+i] = false"
+            (dblclick)="unassign(acc)"
+            class="coverage-list-item list-group-item list-group-item-action d-flex align-items-center"
+            title="Double click to unassign the editor">
+            <user-list-item [user]="acc.registration.user" class="mr-2"></user-list-item>
 
             <ng-container [ngSwitch]="acc.status">
-              <span *ngSwitchCase="AccStatus.CONFIRMED" class="badge badge-success badge-pill p-2">confirmed</span>
-              <span *ngSwitchCase="AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-success badge-pill p-2">confirmed</span>
-              <span *ngSwitchCase="AccStatus.APPLIED" class="badge badge-info badge-pill p-2">applied</span>
-              <span *ngSwitchCase="AccStatus.REFUSED" class="badge badge-danger badge-pill p-2">refused</span>
-              <span *ngSwitchDefault class="badge badge-default badge-pill p-2">assigned</span>
+              <span *ngSwitchCase="AccStatus.CONFIRMED" class="badge badge-success badge-pill">confirmed</span>
+              <span *ngSwitchCase="AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-success badge-pill">confirmed</span>
+              <span *ngSwitchCase="AccStatus.APPLIED" class="badge badge-info badge-pill">applied</span>
+              <span *ngSwitchCase="AccStatus.REFUSED" class="badge badge-danger badge-pill">refused</span>
+              <span *ngSwitchDefault class="badge badge-default badge-pill">assigned</span>
             </ng-container>
 
-            <span *ngIf="acc.guestsRequested > 0 && acc.status != AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-default badge-pill p-2">+{{acc.guestsRequested}}</span>
-            <span *ngIf="acc.guestsRequested > 0 && acc.status == AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-warning badge-pill p-2">no guests</span>
+            <span *ngIf="acc.registration.guestsRequested > 0 && acc.status != AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-default badge-pill">+{{acc.registration.guestsRequested}}</span>
+            <span *ngIf="acc.registration.guestsRequested > 0 && acc.status == AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-warning badge-pill">no guests</span>
 
-            <div *ngIf="btnsVisible[i]" class="ml-auto">
+            <div *ngIf="btnsVisible['ae'+i]" class="ml-auto">
               <div ngbDropdown class="btn-group" role="group">
-                <button type="button" class="btn btn-link btn-xsm dropdown-toggle-split" ngbDropdownToggle title="Update accreditation status">
+                <button type="button" class="btn btn-secondary btn-xs dropdown-toggle-split" ngbDropdownToggle title="Update accreditation status">
                   <fa name="id-badge"></fa>
+                  <span>Update status</span>
                 </button>
                 <div class="dropdown-menu dropdown-menu-right">
-                  <button *ngIf="acc.status != AccStatus.NOT_APPLIED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.NOT_APPLIED)">
+                  <button *ngIf="acc.status != AccStatus.NOT_APPLIED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.NOT_APPLIED; updateAccreditations();">
                     <span><fa name="long-arrow-right"></fa>&nbsp;Not applied</span>
                   </button>
-                  <button *ngIf="acc.status != AccStatus.APPLIED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.APPLIED)">
+                  <button *ngIf="acc.status != AccStatus.APPLIED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.APPLIED; updateAccreditations();">
                     <span class="text-info"><fa name="long-arrow-right"></fa>&nbsp;Applied</span>
                   </button>
-                  <button *ngIf="acc.status != AccStatus.CONFIRMED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.CONFIRMED)">
+                  <button *ngIf="acc.status != AccStatus.CONFIRMED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.CONFIRMED; updateAccreditations();">
                     <span class="text-success">
                       <fa name="long-arrow-right"></fa>&nbsp;Confirmed
                       <span *ngIf="acc?.guestsRequested > 0" class="badge badge-default badge-pill">+{{acc.guestsRequested}}</span>
                     </span>
                   </button>
-                  <button *ngIf="acc.status != AccStatus.CONFIRMED_NO_GUESTS && acc.guestsRequested > 0" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.CONFIRMED_NO_GUESTS)">
+                  <button *ngIf="acc.status != AccStatus.CONFIRMED_NO_GUESTS && acc.registration.guestsRequested > 0" type="button" class="dropdown-item" (click)="acc.status = AccStatus.CONFIRMED_NO_GUESTS; updateAccreditations();">
                     <span class="text-success">
                       <fa name="long-arrow-right"></fa>&nbsp;Confirmed
                       <span class="badge badge-warning badge-pill">no guests</span>
                     </span>
                   </button>
-                  <button *ngIf="acc.status!=AccStatus.REFUSED" type="button" class="dropdown-item" (click)="setAccStatus(i, AccStatus.REFUSED)">
+                  <button *ngIf="acc.status != AccStatus.REFUSED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.REFUSED; updateAccreditations();">
                     <span class="text-danger"><fa name="long-arrow-right"></fa>&nbsp;Refused</span>
                   </button>
                 </div>
               </div>
-              <button type="button" class="close text-danger" (click)="unassign({index:i,acc:acc})" title="Unassign">
-                <span>&times;</span>
+              <button type="button" class="btn btn-xs btn-danger" (click)="unassign(acc)" title="Unassign the editor">
+                <fa name="times"></fa>
               </button>
             </div>
           </li>
-        </ul>
 
-        <ul class="col">
-          <li class="application-list-header list-group-item list-group-item-info d-flex align-items-center">
-            <fa name="pencil-square-o"></fa>
+          <li class="coverage-list-header list-group-item list-group-item-info d-flex align-items-center">
             <span>Registered editors</span>
             <button #btnAddE type="button" class="btn btn-xs btn-success ml-auto" (click)="btnAddE.add = true">
               <fa name="plus"></fa>
               <span>Add editor</span>
             </button>
           </li>
-          <li *ngFor="let app of eventObject.appliedEditors; let i = index"
+          <li *ngFor="let reg of eventObject.unassignedEditors; let i = index"
             (mouseenter)="btnsVisible['e'+i]=true"
             (mouseleave)="btnsVisible['e'+i]=false"
-            (dblclick)="assignApplicant(app)"
-            class="application-list-item list-group-item list-group-item-action d-flex align-items-center"
+            (dblclick)="assign(reg)"
+            class="coverage-list-item list-group-item list-group-item-action d-flex align-items-center"
             title="Double click to assign this editor for accreditation">            
-            <user-list-item [user]="app.user"></user-list-item>
-            <span *ngIf="app.guestsRequested > 0" class="badge badge-default badge-pill badge-guests">+{{app.guestsRequested}}</span>
+            <user-list-item [user]="reg.user" class="mr-2"></user-list-item>
+            <span *ngIf="reg.guestsRequested > 0" class="badge badge-default badge-pill">+{{reg.guestsRequested}}</span>
             <div *ngIf="btnsVisible['e'+i]" class="ml-auto">
-              <button type="button" class="btn btn-xs btn-primary" (click)="assignApplicant(app)" title="Assign this editor for accreditation">
+              <button type="button" class="btn btn-xs btn-primary" (click)="assign(reg)" title="Assign the editor for accreditation">
                 <fa name="arrow-left"></fa>
                 <span>Assign</span>
               </button>
-              <button type="button" class="btn btn-xs btn-danger" (click)="removeApplicant(app)" title="Remove this editor from applicants">
+              <button type="button" class="btn btn-xs btn-danger" (click)="unregister(reg)" title="Unregister the editor">
                 <fa name="times"></fa>
               </button>
             </div>
           </li>
-          <li *ngIf="btnAddE.add || !eventObject.appliedEditors.length" class="application-list-item list-group-item list-group-item-action">
-            <span *ngIf="!btnAddE.add" class="text-warning">&lt;no editors applied&gt;</span>
-            <user-select *ngIf="btnAddE.add" initialState="input" (selectUser)="applyEditor($event.item); btnAddE.add = false;"></user-select>
+          <li *ngIf="btnAddE.add || !eventObject.unassignedEditors.length" class="coverage-list-item list-group-item list-group-item-action">
+            <span *ngIf="!btnAddE.add" class="text-warning">&lt;no editors available&gt;</span>
+            <user-select *ngIf="btnAddE.add" initialState="input" (selectUser)="registerEditor($event.item); btnAddE.add = false;"></user-select>
           </li>
-
-          <!--li class="font-italic p-2 list-group-item list-group-item-info">Registered photographers</li>
-          <li *ngIf="!eventObject.photo || eventObject.photo.length == 0" class="list-group-item text-warning p-2">&nbsp;&nbsp;&nbsp;&lt;no available photographers&gt;</li>
-          <li *ngFor="let applcnt of eventObject.photo; let i = index"
-            (mouseenter)="btnsVisible['p'+i]=true"
-            (mouseleave)="btnsVisible['p'+i]=false"
-            (dblclick)="assignPhoto({index:i,app:applcnt})"
-            class="list-group-item list-group-item-action d-flex align-items-center no-pad"
-            title="Double click to assign this photographer">
-            <fa class="p-2" name="camera"></fa>
-            <user-list-item [uid]="applcnt.uid" class="p-2"></user-list-item>
-            <span *ngIf="applcnt.guestsRequested > 0" class="badge badge-default badge-pill p-2">+{{applcnt.guestsRequested}}</span>
-            <button type="button" *ngIf="btnsVisible['p'+i]" class="btn btn-link btn-xsm text-success ml-auto" (click)="assignPhoto({index:i,app:applcnt})" title="Assign this photographer">
-              <fa name="arrow-left"></fa>
-            </button>
-          </li-->
         </ul>
 
 
-        <ul class="col">
-          <li class="application-list-header list-group-item list-group-item-info d-flex align-items-center">
+        <ul class="list-group col pr-0">
+          <li class="coverage-list-header list-group-item list-group-item-success d-flex align-items-center">
             <fa name="camera"></fa>
+            <span>Photographers</span>
+          </li>
+          <li *ngIf="!getAccreditations(AccJob.PHOTOGRAPHER).length" class="coverage-list-item list-group-item text-warning">&lt;no photographers assigned&gt;</li>
+          <li *ngFor="let acc of getAccreditations(AccJob.PHOTOGRAPHER); let i = index"
+            (mouseenter)="btnsVisible['ap'+i] = true"
+            (mouseleave)="btnsVisible['ap'+i] = false"
+            (dblclick)="unassign(acc)"
+            class="coverage-list-item list-group-item list-group-item-action d-flex align-items-center"
+            title="Double click to unassign the photographer">
+            <user-list-item [user]="acc.registration.user" class="mr-2"></user-list-item>
+
+            <ng-container [ngSwitch]="acc.status">
+              <span *ngSwitchCase="AccStatus.CONFIRMED" class="badge badge-success badge-pill">confirmed</span>
+              <span *ngSwitchCase="AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-success badge-pill">confirmed</span>
+              <span *ngSwitchCase="AccStatus.APPLIED" class="badge badge-info badge-pill">applied</span>
+              <span *ngSwitchCase="AccStatus.REFUSED" class="badge badge-danger badge-pill">refused</span>
+              <span *ngSwitchDefault class="badge badge-default badge-pill">assigned</span>
+            </ng-container>
+
+            <span *ngIf="acc.registration.guestsRequested > 0 && acc.status != AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-default badge-pill">+{{acc.registration.guestsRequested}}</span>
+            <span *ngIf="acc.registration.guestsRequested > 0 && acc.status == AccStatus.CONFIRMED_NO_GUESTS" class="badge badge-warning badge-pill">no guests</span>
+
+            <div *ngIf="btnsVisible['ae'+i]" class="ml-auto">
+              <div ngbDropdown class="btn-group" role="group">
+                <button type="button" class="btn btn-secondary btn-xs dropdown-toggle-split" ngbDropdownToggle title="Update accreditation status">
+                  <fa name="id-badge"></fa>
+                  <span>Update status</span>
+                </button>
+                <div class="dropdown-menu dropdown-menu-right">
+                  <button *ngIf="acc.status != AccStatus.NOT_APPLIED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.NOT_APPLIED; updateAccreditations();">
+                    <span><fa name="long-arrow-right"></fa>&nbsp;Not applied</span>
+                  </button>
+                  <button *ngIf="acc.status != AccStatus.APPLIED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.APPLIED; updateAccreditations();">
+                    <span class="text-info"><fa name="long-arrow-right"></fa>&nbsp;Applied</span>
+                  </button>
+                  <button *ngIf="acc.status != AccStatus.CONFIRMED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.CONFIRMED; updateAccreditations();">
+                    <span class="text-success">
+                      <fa name="long-arrow-right"></fa>&nbsp;Confirmed
+                      <span *ngIf="acc?.guestsRequested > 0" class="badge badge-default badge-pill">+{{acc.guestsRequested}}</span>
+                    </span>
+                  </button>
+                  <button *ngIf="acc.status != AccStatus.CONFIRMED_NO_GUESTS && acc.registration.guestsRequested > 0" type="button" class="dropdown-item" (click)="acc.status = AccStatus.CONFIRMED_NO_GUESTS; updateAccreditations();">
+                    <span class="text-success">
+                      <fa name="long-arrow-right"></fa>&nbsp;Confirmed
+                      <span class="badge badge-warning badge-pill">no guests</span>
+                    </span>
+                  </button>
+                  <button *ngIf="acc.status != AccStatus.REFUSED" type="button" class="dropdown-item" (click)="acc.status = AccStatus.REFUSED; updateAccreditations();">
+                    <span class="text-danger"><fa name="long-arrow-right"></fa>&nbsp;Refused</span>
+                  </button>
+                </div>
+              </div>
+              <button type="button" class="btn btn-xs btn-danger" (click)="unassign(acc)" title="Unassign the photographer">
+                <fa name="times"></fa>
+              </button>
+            </div>
+          </li>
+
+          <li class="coverage-list-header list-group-item list-group-item-info d-flex align-items-center">
             <span>Registered photographers</span>
             <button #btnAddP type="button" class="btn btn-xs btn-success ml-auto" (click)="btnAddP.add = true">
               <fa name="plus"></fa>
               <span>Add photographer</span>
             </button>
           </li>
-          <li *ngFor="let app of eventObject.appliedPhotographers; let i = index"
+          <li *ngFor="let reg of eventObject.unassignedPhotographers; let i = index"
             (mouseenter)="btnsVisible['p'+i]=true"
             (mouseleave)="btnsVisible['p'+i]=false"
             (dblclick)="assignApplicant(app)"
-            class="application-list-item list-group-item list-group-item-action d-flex align-items-center"
+            class="coverage-list-item list-group-item list-group-item-action d-flex align-items-center"
             title="Double click to assign this photorapher for accreditation">
-            <user-list-item [user]="app.user"></user-list-item>
-            <span *ngIf="app.guestsRequested > 0" class="badge badge-default badge-pill badge-guests">+{{app.guestsRequested}}</span>
+            <user-list-item [user]="reg.user"></user-list-item>
+            <span *ngIf="reg.guestsRequested > 0" class="badge badge-default badge-pill badge-guests">+{{reg.guestsRequested}}</span>
             <div *ngIf="btnsVisible['p'+i]" class="ml-auto">
-              <button type="button" class="btn btn-xs btn-primary" (click)="assignApplicant(app)" title="Assign this photographer for accreditation">
+              <button type="button" class="btn btn-xs btn-primary" (click)="assign(reg)" title="Assign the photographer for accreditation">
                 <fa name="arrow-left"></fa>
                 <span>Assign</span>
               </button>
-              <button type="button" class="btn btn-xs btn-danger" (click)="removeApplicant(app)" title="Remove this potographer from applicants">
+              <button type="button" class="btn btn-xs btn-danger" (click)="unregister(reg)" title="Unregister the potographer">
                 <fa name="times"></fa>
               </button>
             </div>
           </li>
-          <li *ngIf="btnAddP.add || !eventObject.appliedPhotographers.length" class="application-list-item list-group-item list-group-item-action">
-            <span *ngIf="!btnAddP.add" class="text-warning">&lt;no photograpers applied&gt;</span>
-            <user-select *ngIf="btnAddP.add" initialState="input" (selectUser)="applyPhotographer($event.item); btnAddP.add = false;"></user-select>
+          <li *ngIf="btnAddP.add || !eventObject.unassignedPhotographers.length" class="coverage-list-item list-group-item list-group-item-action">
+            <span *ngIf="!btnAddP.add" class="text-warning">&lt;no photograpers available&gt;</span>
+            <user-select *ngIf="btnAddP.add" initialState="input" (selectUser)="registerPhotographer($event.item); btnAddP.add = false;"></user-select>
           </li>
         </ul>
 
@@ -290,5 +333,4 @@
   </ngb-tab>
 
 </ngb-tabset>
-
-<!--button type="button" class="close" (click)="cancel()">&times;</button-->
+        {{eventObject | json}}

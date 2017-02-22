@@ -3,7 +3,7 @@ import { Subscription, Observable } from 'rxjs';
 import { FirebaseObjectObservable } from 'angularfire2';
 import { AtqComponent } from '../atq/atq-component';
 import { CalendarEvent, ImportedEvent } from '../model/event.entity'
-import { Application, User, Venue } from '../model/index';
+import { Registration, User, Venue } from '../model/index';
 import { Accreditation } from '../model/accreditation.entity';
 import { EventTypeComponent } from './event-type.component';
 import { EntityManager, DAO } from '../atq/persistence';
@@ -29,6 +29,7 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
   private btnsVisible: { [key: string]: boolean } = {};
 
   private AccStatus = Accreditation.Status;
+  private AccJob = Registration.Job;
 
   private importedEvents: CalendarEvent[];
   private venues: Venue[];
@@ -163,88 +164,58 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     Object.assign(this.eventObject.venue, event.item);
   }
 
-  private setAccStatus(index: number, status: Accreditation.Status) {
-    this.eventObject.accreditations[index].status = status;
-    this.event$.update({
+  private getAccreditations(job: Registration.Job): Accreditation[] {
+    return this.eventObject.accreditations.filter(acc => acc.registration.job == job);
+  }
+
+  private updateAccreditations() {
+    /*this.event$.update({
       accreditations: this.eventObject.accreditations
-    });
+    });*/
   }
 
-  private unassign(indexObj: any) {
-    if (indexObj.acc.job == 'editor') {
-      (this.eventObject.editors || (this.eventObject.editors = [])).push(indexObj.acc);
-      this.eventObject.accreditations.splice(indexObj.index, 1);
-      this.event$.update({
-        accreditations: this.eventObject.accreditations,
-        editors: this.eventObject.editors
-      });
-    } else {
-      (this.eventObject.photo || (this.eventObject.photo = [])).push(indexObj.acc);
-      this.eventObject.accreditations.splice(indexObj.index, 1);
-      this.event$.update({
-        accreditations: this.eventObject.accreditations,
-        photo: this.eventObject.photo
-      });
-    }
-  }
+  private assign(reg: Registration) {
 
-  private assignEditor(applicant: any) {
+    // create new accreditation by assigning
     let acc = new Accreditation();
-    acc.user = applicant.app.user;
-    acc.status = applicant.app.status || Accreditation.Status.NOT_APPLIED;
-    acc.guestsRequested = applicant.app.guestsRequested || 0;
-    acc.job = 'editor';
-    (this.eventObject.accreditations || (this.eventObject.accreditations = [])).push(acc);
-    this.eventObject.editors.splice(applicant.index, 1);
-    this.event$.update({
+    acc.registration = reg;
+
+    reg.status = Registration.Status.ASSIGNED;
+    this.eventObject.accreditations.push(acc);
+
+    /*this.event$.update({
       accreditations: this.eventObject.accreditations,
       editors: this.eventObject.editors
-    });
+    });*/
   }
 
-  private assignPhoto(applicant: any) {
-    try {
-    let acc = new Accreditation();
-    acc.user = applicant.app.user;
-    acc.status = applicant.app.status || Accreditation.Status.NOT_APPLIED;
-    acc.guestsRequested = applicant.app.guestsRequested || 0;
-    acc.job = 'photo';
-    (this.eventObject.accreditations || (this.eventObject.accreditations = [])).push(acc);
-    this.eventObject.photo.splice(applicant.index, 1);
-    this.event$.update({
+  private unassign(acc: Accreditation) {
+
+    this.eventObject.accreditations.splice(this.eventObject.accreditations.indexOf(acc), 1);
+    acc.registration.status = Registration.Status.UNASSIGNED;
+
+    /*this.event$.update({
       accreditations: this.eventObject.accreditations,
-      photo: this.eventObject.photo
-    });
-    } catch (err) {
-      console.error(err);
-    }
+      editors: this.eventObject.editors
+    });*/
   }
 
-  private checkEditors(): boolean {
-    return (!this.eventObject.editors || this.eventObject.editors.length == 0) &&
-      (!this.eventObject.accreditations || this.eventObject.accreditations.filter(acc => acc.job == 'editor').length == 0);
+  private registerEditor(user: User) {
+    let reg: Registration = new Registration();
+    reg.job = Registration.Job.EDITOR;
+    reg.user = user;
+    reg.guestsRequested = 1;
+    this.eventObject.registrations.push(reg);
   }
 
-  private checkPhoto(): boolean {
-    return (!this.eventObject.photo || this.eventObject.photo.length == 0) &&
-      (!this.eventObject.accreditations || this.eventObject.accreditations.filter(acc => acc.job == 'photo').length == 0);
+  private registerPhotographer(user: User) {
+    let reg: Registration = new Registration();
+    reg.job = Registration.Job.PHOTOGRAPHER;
+    reg.user = user;
+    this.eventObject.registrations.push(reg);
   }
 
-  private applyEditor(user: User) {
-    let application: Application = new Application();
-    application.job = Application.Job.EDITOR;
-    application.user = user;
-    this.eventObject.applications.push(application);
-  }
-
-  private applyPhotographer(user: User) {
-    let application: Application = new Application();
-    application.job = Application.Job.PHOTOGRAPHER;
-    application.user = user;
-    this.eventObject.applications.push(application);
-  }
-
-  private removeApplicant(application: Application) {
-    this.eventObject.applications.splice(this.eventObject.applications.indexOf(application), 1);
+  private unregister(reg: Registration) {
+    this.eventObject.registrations.splice(this.eventObject.registrations.indexOf(reg), 1);
   }
 }

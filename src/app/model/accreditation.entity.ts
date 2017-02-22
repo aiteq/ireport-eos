@@ -1,13 +1,11 @@
 import { AbstractEntity, Entity, ManyToOne } from '../atq/persistence';
-import { User } from './user.entity'
+import { Registration } from './registration.entity';
 
 @Entity()
 export class Accreditation extends AbstractEntity {
 
-  @ManyToOne(() => User) user: User;
-  status: Accreditation.Status;
-  job: string;
-  guestsRequested: number;
+  @ManyToOne(() => Registration) registration: Registration;
+  status: Accreditation.Status = Accreditation.Status.NOT_APPLIED;
   guestsConfirmed: number;
 
 }

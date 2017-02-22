@@ -1,4 +1,4 @@
-.application-list-item {
+.coverage-list-item {
   height: 2.5rem;
   padding: 0 0.8rem;
 
@@ -6,12 +6,12 @@
     margin-right: 0.5rem;
   }
 
-  .badge-guests {
+  .badge {
     padding: 0.5rem;
   }
 }
 
-.application-list-header {
-  @extend .application-list-item;
+.coverage-list-header {
+  @extend .coverage-list-item;
   font-style: italic;
 }

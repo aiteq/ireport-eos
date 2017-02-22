@@ -2,17 +2,23 @@ import { AbstractEntity, Entity, ManyToOne } from '../atq/persistence';
 import { User } from './user.entity';
 
 @Entity()
-export class Application extends AbstractEntity {
+export class Registration extends AbstractEntity {
 
   @ManyToOne(() => User) user: User;
-  job: Application.Job;
+  job: Registration.Job;
+  status: Registration.Status = Registration.Status.UNASSIGNED;
   guestsRequested: number;
-  guestsConfirmed: number;
 }
 
-export namespace Application {
+export namespace Registration {
   export enum Job {
     EDITOR,
     PHOTOGRAPHER
+  }
+
+  export enum Status {
+    UNASSIGNED,
+    ASSIGNED,
+    BACKUP
   }
 }

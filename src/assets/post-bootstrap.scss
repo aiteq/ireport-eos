@@ -36,7 +36,7 @@ input[type="date"], input[type="time"], input[type="datetime-local"] {
 
 .btn-group {
   &.dropdown {
-    display: flex;
+    display: inline-block;
   }
   & > div:first-child:not(:last-child) {
     border-bottom-right-radius: 0;
@@ -98,4 +98,8 @@ ngb-tabset .tab-content {
 
 .btn {
   cursor: pointer;
+}
+
+.badge + .badge {
+  margin-left: 0.25rem;
 }
