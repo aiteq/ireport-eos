@@ -5,6 +5,7 @@ import { User } from '../model/user.entity';
 @Component({
   selector: 'user-list-item',
   templateUrl: './user-list-item.component.html',
+  styleUrls: ['./user-list-item.component.css']
 })
 export class UserListItemComponent implements OnChanges {
   private userPhotoStyle: SafeStyle;

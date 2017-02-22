@@ -25,7 +25,7 @@ abstract class AtqEnvFriendlyComponent implements AtqEnvFriendly, OnDestroy {
 
   private cleanUpAll(): void {
     Object.values(this).forEach(trash => {
-      if ('atqCleanUp' in trash) {
+      if (typeof trash === 'object' && 'atqCleanUp' in trash) {
         (<AtqEnvFriendly>trash).atqCleanUp();
       }
     });

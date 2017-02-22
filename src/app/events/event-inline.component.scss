@@ -1,0 +1,17 @@
+.application-list-item {
+  height: 2.5rem;
+  padding: 0 0.8rem;
+
+  & > fa {
+    margin-right: 0.5rem;
+  }
+
+  .badge-guests {
+    padding: 0.5rem;
+  }
+}
+
+.application-list-header {
+  @extend .application-list-item;
+  font-style: italic;
+}

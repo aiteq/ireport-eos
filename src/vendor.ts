@@ -9,7 +9,10 @@ import '@angular/router';
 import 'rxjs';
 import 'angularfire2';
 import 'jquery';
-import 'bootstrap-loader';
+//import 'bootstrap-loader';
+
+//import './assets/pre-bootstrap.scss';
+//import 'bootstrap/scss/bootstrap.scss';
 
 //import 'font-awesome/css/font-awesome.css';
 //import 'font-awesome/scss/font-awesome.scss';

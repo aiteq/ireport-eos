@@ -1,17 +1,16 @@
 <template #rtUser let-r="result" let-t="term">
   <span [innerHtml]="highlightTerm(r.name, t)"></span>
 </template>
-<label for="{{elementId}}">
-  <fa name="plus"></fa>
-</label>
+<fa *ngIf="!inputVisible" name="plus" (click)="inputVisible = true"></fa>
 <input
+  *ngIf="inputVisible"
   type="text"
-  id="{{elementId}}"
   placeholder="start typing to search for user"
   [ngModel]="user"
   [ngbTypeahead]="searchUsers"
   [resultTemplate]="rtUser"
   [inputFormatter]="formatUser"
-  (selectItem)="selectUser.emit($event)"
+  (selectItem)="selectUser.emit($event); inputVisible = initialState === 'input';"
+  focus
 />
-<fa name="users"></fa>
+<fa *ngIf="inputVisible" name="users"></fa>

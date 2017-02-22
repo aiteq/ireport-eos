@@ -1,3 +1,8 @@
+@import "pre-bootstrap.scss";
+@import "../../node_modules/bootstrap/scss/bootstrap.scss";
+@import "post-bootstrap.scss";
+
+
 /*
  * event type icons
  */
@@ -40,4 +45,10 @@ fa i.fa-calendar-o {
 
 .list-group-item.active fa i {
   color: $ctx-color-active !important;
+}
+
+.btn-xs {
+  padding: 0.2rem 0.5rem;
+  font-size: 0.7rem;
+  border-radius: 0.15rem;
 }

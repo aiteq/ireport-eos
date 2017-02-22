@@ -9,13 +9,13 @@ import { Utils } from '../shared/utils';
 @Component({
   selector: 'user-select',
   templateUrl: './user-select.component.html',
+  styleUrls: ['./user-select.component.scss']
 })
 export class UserSelectComponent extends AtqComponent implements OnInit, OnChanges {
 
-  @Output() selectUser: EventEmitter<any> = new EventEmitter<any>();
+  @Input() initialState: 'icon' | 'input' = 'icon';
 
-  private static counter: number = 0;
-  private elementId: string = 'userSelect' + (UserSelectComponent.counter++);
+  @Output() selectUser: EventEmitter<any> = new EventEmitter<any>();
 
   private dao: DAO<User>;
   private user: User;
@@ -24,6 +24,7 @@ export class UserSelectComponent extends AtqComponent implements OnInit, OnChang
   private userPhotoStyle: SafeStyle;
   private users: User[];
   private highlightTerm = Utils.highlightTerm;
+  private inputVisible: boolean = false;
 
   constructor(private em: EntityManager, private sanitizer: DomSanitizer) {
     super();
@@ -38,6 +39,7 @@ export class UserSelectComponent extends AtqComponent implements OnInit, OnChang
     this.users.push(u);
     u = new User();
     u.name = 'Tomáš Dařbič Klíma';
+    u.urlPhoto = 'https://www.gravatar.com/avatar/01be78c58daa73595a9f66977d24e3cf?s=64&d=identicon&r=PG';
     this.users.push(u);
     u = new User();
     u.name = 'Ho ho ha ha';
@@ -45,6 +47,9 @@ export class UserSelectComponent extends AtqComponent implements OnInit, OnChang
   }
 
   ngOnChanges(changes: any) {
+    if (changes.initialState && changes.initialState.currentValue) {
+      this.inputVisible = changes.initialState.currentValue === 'input';
+    }
     /*
     if (changes.uid && changes.uid.currentValue) {
       this.user$ = this.dao.find(changes.uid.currentValue);

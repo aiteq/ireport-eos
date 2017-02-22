@@ -1,2 +1,2 @@
-<div *ngIf="user" [style]="userPhotoStyle" class="rounded"></div>
-<div *ngIf="user">{{user.name}}</div>
+<div *ngIf="user && user.urlPhoto" [style]="userPhotoStyle"></div>
+<span *ngIf="user">{{user.name}}</span>

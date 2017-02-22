@@ -32,20 +32,27 @@ module.exports = {
             loader: 'file-loader?name=assets/[name].[hash].[ext]'
         },
         {
-           test: /\.css$/,
-           //loaders: ['to-string-loader', 'css-loader']
-           loaders: ['style-loader', 'css-loader']
+            /* loader for global (non-component) .css files */
+            test: /\.css$/,
+            exclude: /src\/app/,
+            loaders: ['style-loader', 'css-loader']
         },
         {
+            /* loader for components' .css files */
+            test: /\.component\.css$/,
+            loaders: ['to-string-loader', 'css-loader']
+        },
+        {
+            /* loader for global (non-component) .scss files */
             test: /\.scss$/,
+            exclude: /src\/app/,
             loaders: ['style-loader', 'css-loader', 'postcss-loader', 'sass-loader']
         },
-        /*
-        {test: /\.woff(\?v=\d+\.\d+\.\d+)?$/, loader: "file-loader?mimetype=application/font-woff"},
-        {test: /\.woff2(\?v=\d+\.\d+\.\d+)?$/, loader: "file-loader?mimetype=application/font-woff"},
-        {test: /\.ttf(\?v=\d+\.\d+\.\d+)?$/, loader: "file-loader?mimetype=application/octet-stream"},
-        {test: /\.eot(\?v=\d+\.\d+\.\d+)?$/, loader: "file-loader"},
-        */
+        {
+            /* loader for components' .scss files */
+            test: /\.component\.scss$/,
+            loaders: ['raw-loader', 'postcss-loader', 'sass-loader']
+        },
         {
             test: /\.woff(2)?(\?v=[0-9]\.[0-9]\.[0-9])?$/,
             loader: "url-loader?limit=10000&mimetype=application/font-woff"

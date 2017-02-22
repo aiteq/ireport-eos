@@ -48,6 +48,14 @@ export class CalendarEvent extends AbstractEntity {
     this.venue = new Venue();
   }
 
+  get appliedEditors(): Application[] {
+    return this.applications.filter(app => app.job == Application.Job.EDITOR);
+  }
+
+  get appliedPhotographers(): Application[] {
+    return this.applications.filter(app => app.job == Application.Job.PHOTOGRAPHER);
+  }
+
   get inputStartDate(): string {
     return this.start ? moment(this.start).format(CalendarEvent.INPUT_DATE_FORMAT) : null;
   }

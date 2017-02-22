@@ -12,6 +12,7 @@ import { Utils } from '../shared/utils';
 @Component({
   selector: 'event-inline',
   templateUrl: './event-inline.component.html',
+  styleUrls: ['./event-inline.component.scss']
 })
 export class EventInlineComponent extends AtqComponent implements OnChanges {
 
@@ -234,5 +235,16 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     application.job = Application.Job.EDITOR;
     application.user = user;
     this.eventObject.applications.push(application);
+  }
+
+  private applyPhotographer(user: User) {
+    let application: Application = new Application();
+    application.job = Application.Job.PHOTOGRAPHER;
+    application.user = user;
+    this.eventObject.applications.push(application);
+  }
+
+  private removeApplicant(application: Application) {
+    this.eventObject.applications.splice(this.eventObject.applications.indexOf(application), 1);
   }
 }

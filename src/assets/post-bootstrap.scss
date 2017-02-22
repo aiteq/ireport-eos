@@ -96,17 +96,6 @@ ngb-tabset .tab-content {
   padding: $spacer-y $spacer-x;
 }
 
-user-select {
-  @extend .d-flex;
-  @extend .align-items-center;
-  label {
-    margin: 0;
-  }
-  fa {
-    @extend .text-muted;
-  }
-  input {
-    @extend .mx-2;
-    width: 12rem;
-  }
+.btn {
+  cursor: pointer;
 }

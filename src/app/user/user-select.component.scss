@@ -1,0 +1,23 @@
+@import "../../../node_modules/bootstrap/scss/_variables.scss";
+
+:host {
+  display: -webkit-box !important;
+  display: -webkit-flex !important;
+  display: -ms-flexbox !important;
+  display: flex !important;
+
+  -webkit-box-align: center !important;
+  -webkit-align-items: center !important;
+  -ms-flex-align: center !important;
+  align-items: center !important;
+
+  fa {
+    color: $text-muted;
+    cursor: pointer;
+  }
+
+  input {
+    margin-right: 0.5rem;
+    width: 12rem;
+  }
+}
