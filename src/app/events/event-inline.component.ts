@@ -28,8 +28,9 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
   private subscriptions: Subscription[] = [];
   private btnsVisible: { [key: string]: boolean } = {};
 
+  // helping accessors - it is not possible to access enums within namespaces from component template
   private AccStatus = Accreditation.Status;
-  private AccJob = Registration.Job;
+  private RegJob = Registration.Job;
 
   private importedEvents: CalendarEvent[];
   private venues: Venue[];
@@ -200,16 +201,9 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     });*/
   }
 
-  private registerEditor(user: User) {
+  private register(user: User, job: Registration.Job) {
     let reg: Registration = new Registration();
-    reg.job = Registration.Job.EDITOR;
-    reg.user = user;
-    this.eventObject.registrations.push(reg);
-  }
-
-  private registerPhotographer(user: User) {
-    let reg: Registration = new Registration();
-    reg.job = Registration.Job.PHOTOGRAPHER;
+    reg.job = job;
     reg.user = user;
     this.eventObject.registrations.push(reg);
   }

@@ -10,8 +10,8 @@
             <fa name="pencil-square-o"></fa>
             <span>Editors</span>
           </li>
-          <li *ngIf="!getAccreditations(AccJob.EDITOR).length" class="coverage-list-item list-group-item text-warning">&lt;no editors assigned&gt;</li>
-          <li *ngFor="let acc of getAccreditations(AccJob.EDITOR); let i = index"
+          <li *ngIf="!getAccreditations(RegJob.EDITOR).length" class="coverage-list-item list-group-item text-warning">&lt;no editors assigned&gt;</li>
+          <li *ngFor="let acc of getAccreditations(RegJob.EDITOR); let i = index"
             (mouseenter)="btnsVisible['ae'+i] = true"
             (mouseleave)="btnsVisible['ae'+i] = false"
             (dblclick)="unassign(acc)"
@@ -93,7 +93,7 @@
           </li>
           <li *ngIf="btnAddE.add || !eventObject.unassignedEditors.length" class="coverage-list-item list-group-item list-group-item-action">
             <span *ngIf="!btnAddE.add" class="text-warning">&lt;no editors available&gt;</span>
-            <user-select *ngIf="btnAddE.add" initialState="input" (selectUser)="registerEditor($event.item); btnAddE.add = false;"></user-select>
+            <user-select *ngIf="btnAddE.add" initialState="input" (selectUser)="register($event.item, RegJob.EDITOR); btnAddE.add = false;"></user-select>
           </li>
         </ul>
 
@@ -103,8 +103,8 @@
             <fa name="camera"></fa>
             <span>Photographers</span>
           </li>
-          <li *ngIf="!getAccreditations(AccJob.PHOTOGRAPHER).length" class="coverage-list-item list-group-item text-warning">&lt;no photographers assigned&gt;</li>
-          <li *ngFor="let acc of getAccreditations(AccJob.PHOTOGRAPHER); let i = index"
+          <li *ngIf="!getAccreditations(RegJob.PHOTOGRAPHER).length" class="coverage-list-item list-group-item text-warning">&lt;no photographers assigned&gt;</li>
+          <li *ngFor="let acc of getAccreditations(RegJob.PHOTOGRAPHER); let i = index"
             (mouseenter)="btnsVisible['ap'+i] = true"
             (mouseleave)="btnsVisible['ap'+i] = false"
             (dblclick)="unassign(acc)"
@@ -186,7 +186,7 @@
           </li>
           <li *ngIf="btnAddP.add || !eventObject.unassignedPhotographers.length" class="coverage-list-item list-group-item list-group-item-action">
             <span *ngIf="!btnAddP.add" class="text-warning">&lt;no photograpers available&gt;</span>
-            <user-select *ngIf="btnAddP.add" initialState="input" (selectUser)="registerPhotographer($event.item); btnAddP.add = false;"></user-select>
+            <user-select *ngIf="btnAddP.add" initialState="input" (selectUser)="register($event.item, RegJob.PHOTOGRAPHER); btnAddP.add = false;"></user-select>
           </li>
         </ul>
 

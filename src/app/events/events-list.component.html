@@ -1,4 +1,5 @@
 <div #list class="list-group">
+
   <div class="list-group-item list-group-item-warning d-flex justify-content-between">
     <div class="d-flex">
       <h4 class="m-0">{{year}}</h4>
@@ -12,7 +13,10 @@
       <span>Add event</span>
     </button>
   </div>
+
   <event-inline *ngIf="list.showInlineForm" [@animForm]="list.showInlineForm" (close)="list.showInlineForm = false; activeEvent = $event;" class="list-group-item"></event-inline>
+
+  <!-- month -->
   <ng-container *ngFor="let month of months; let m = index">
     <a href="#" (click)="$event.preventDefault();monthsVisible[m] = !monthsVisible[m]; activeEvent = null;" class="list-group-item list-group-item-info list-group-item-action py-1 px-2 d-flex" [class.greyed-out]="activeEvent">
       <fa class="mr-1" [name]="monthsVisible[m] ? 'caret-down' : 'caret-right'"></fa>
@@ -21,6 +25,8 @@
     </a>
     <ng-container *ngIf="monthsVisible[m]">
       <ng-container *ngFor="let event of month.events" >
+
+        <!-- event -->
         <a href="#" (click)="$event.preventDefault(); activeEvent = activeEvent ? null : event.id;" class="list-group-item list-group-item-action py-1 px-2" [class.active]="activeEvent == event.id" [class.greyed-out]="activeEvent && activeEvent != event.id" style="white-space: nowrap">
           <event-type [type]="event.type"></event-type>
           <div class="ml-2" style="">
@@ -30,12 +36,14 @@
           <strong class="mx-1">{{event.title}}</strong>
           <small>({{event.venue?.name}})</small>
         </a>
-        <div *ngIf="activeEvent == event.id" class="list-group-item">
-          <event-inline [event]="event" class="w-100"></event-inline>
-        </div>
+
+        <!-- inline event form -->
+        <event-inline *ngIf="activeEvent == event.id" [event]="event" class="list-group-item"></event-inline>
+
       </ng-container>
     </ng-container>
   </ng-container>
+
 </div>
 <template #modalAddEvent let-c="close" let-d="dismiss">
   <div class="modal-header">

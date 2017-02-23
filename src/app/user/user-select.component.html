@@ -1,5 +1,5 @@
 <template #rtUser let-r="result" let-t="term">
-  <div class="d-flex align-items-center px-3">
+  <div class="d-flex align-items-center">
     <div class="user-photo mr-2" [style]="safeStyle(r.urlPhoto)"></div>
     <span [innerHtml]="highlightTerm(r.name, t)"></span>
   </div>
