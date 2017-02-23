@@ -10,6 +10,7 @@ import { AtqEnvFriendly } from '../atq-component';
 export abstract class EntityManager implements AtqEnvFriendly {
 
   private daos: Map<string, DAO<AbstractEntity>> = new Map<string, DAO<AbstractEntity>>();
+  private streams: Map<string, Observable<AbstractEntity>> = new Map<string, Observable<AbstractEntity>>();
 
   protected abstract find(location: string, id: string): Observable<Object>;
   protected abstract list(location: string, query?: Object): Observable<Object[]>;
@@ -77,8 +78,14 @@ export abstract class EntityManager implements AtqEnvFriendly {
 
     private findEntity(id: string, entityType: EntityType): Observable<any> {
 
-      return this.em.find(entityType.getMetadata().location, id)
-        .map((object: Object) => this.resolveEntity(object, entityType));
+      let stream = this.em.streams.get(id);
+      if (!stream) {
+        stream = this.em.find(entityType.getMetadata().location, id)
+          .map((object: Object) => this.resolveEntity(object, entityType));
+        this.em.streams.set(id, stream);
+      }
+
+      return stream;
     }
 
     private resolveEntity(object: Object, entityType: EntityType): AbstractEntity {
