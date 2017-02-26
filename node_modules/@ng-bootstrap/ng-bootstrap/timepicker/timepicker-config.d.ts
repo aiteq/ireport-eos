@@ -12,4 +12,5 @@ export declare class NgbTimepickerConfig {
     secondStep: number;
     disabled: boolean;
     readonlyInputs: boolean;
+    size: 'small' | 'medium' | 'large';
 }

@@ -16,6 +16,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
   protected abstract list(location: string, query?: Object): Observable<Object[]>;
   //protected abstract save(location: string, entity: AbstractEntity): any;
   protected abstract save(td: EntityManager.TransactionData): void;
+  //protected abstract update<T extends AbstractEntity>(location: string, entity: T, updateData: Object): void;
   protected abstract generateId<T extends AbstractEntity>(location: string, entity: T): string;
 
 
@@ -48,7 +49,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
         Observable.throw(new Error(`DAO.find: missing or invalid 'id' parameter`));
       }
 
-      return this.findEntity(id, this.entityType);
+      return this.reviveEntity(id, this.entityType);
     }
 
     list(query?: Object): Observable<E[]> {
@@ -56,7 +57,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
         .map((objects: Object[]) => objects.map((object: Object) => this.resolveEntity(object, this.entityType)));
     }
 
-    save(entity: E): Observable<E> {
+    save(entity: E, updateData?: Object): Observable<E> {
 
       if (!entity) {
         Observable.throw(new Error('DAO.save: nothing to save'));
@@ -72,11 +73,14 @@ export abstract class EntityManager implements AtqEnvFriendly {
         Observable.throw(new Error(`DAO.save: '${entity.constructor.name}' is not intended to save directly`));
       }
 
-      this.em.save(this.prepareToSave(entity));
-      return this.find(entity.id);
+      let td: EntityManager.TransactionData = new EntityManager.TransactionData();
+      this.prepareToSave(entity, td, updateData);
+      this.em.save(td);
+      
+      return this.reviveEntity(entity.id, this.entityType);
     }
 
-    private findEntity(id: string, entityType: EntityType): Observable<any> {
+    private reviveEntity(id: string, entityType: EntityType): Observable<any> {
 
       let stream = this.em.streams.get(id);
       if (!stream) {
@@ -93,7 +97,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
       // convert the object returned by the underlaying entity manager to entity type
       let entity: AbstractEntity = Object.assign(new entityType.prototype.constructor(), object);
       Object.defineProperty(entity, 'id', {
-        writable: false,
+        writable: true,
         configurable: false,
         enumerable: true
       });
@@ -110,7 +114,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
       if (typeof object[key] === 'string' && foreignEntityType.getMetadata().location) {
 
         // many-to-one
-        this.subscriptions.push(this.findEntity(object[key], foreignEntityType).subscribe(value => {
+        this.subscriptions.push(this.reviveEntity(object[key], foreignEntityType).subscribe(value => {
           object[key] = value;
         }));
 
@@ -131,15 +135,18 @@ export abstract class EntityManager implements AtqEnvFriendly {
       }
     }
 
-    private prepareToSave(entity: AbstractEntity, td?: EntityManager.TransactionData): EntityManager.TransactionData {
+    private prepareToSave(entity: AbstractEntity, td: EntityManager.TransactionData, updateData?: Object): AbstractEntity | string {
 
-      td = td || new EntityManager.TransactionData();
+      if (updateData && !entity.id) {
+        throw new Error('DAO.prepareToSave: updateData parameter is allowed only with existing entity');
+      }
 
+      let toSave: any = updateData || Object.assign({}, entity);
       let emd: EntityMetadata = entity.getMetadata();
 
       emd.relations.forEach((relation, key) => {
 
-        if (typeof entity[key] !== 'object') {
+        if (typeof toSave[key] !== 'object') {
           return;
         }
 
@@ -147,56 +154,74 @@ export abstract class EntityManager implements AtqEnvFriendly {
 
           case Relation.Type.MANY_TO_ONE:
 
-            // prepare property object to save
-            this.prepareToSave(entity[key], td);
+            toSave[key] = this.getRelatedValueToSave(toSave[key], relation, td);
 
-            if (relation.foreignEntityType.getMetadata().location) {
-              // replace property's value with its id, if the property is manageable
-              entity[key] = entity[key].id;
+            if (toSave[key] === undefined) {
+              delete toSave[key];
             }
 
             break;
 
           case Relation.Type.ONE_TO_MANY:
 
-            let array: AbstractEntity[] = entity[key];
+            // prepare to save all items of one-to-many property
+            toSave[key] = toSave[key].map((item: AbstractEntity, index: number) => {
 
-            array.forEach(item => this.prepareToSave(item, td));
+              return this.getRelatedValueToSave(item, relation, td);
 
-            if (relation.foreignEntityType.getMetadata().location) {
-              entity[key] = array.map(item => {
-                return item.id;
-              });
-            }
+            }).filter((item: AbstractEntity) => item !== undefined);
 
             break;
         }
       });
 
-      /*
-      for (let key in entity) {
+      if (emd.location) {
 
-        let pmd: EntityMetadata = entity[key] && entity[key].getMetadata && entity[key].getMetadata();
+        // this entity is inteded to save to its own location
 
-        if (typeof entity[key] === 'object' && pmd) {
+        if (updateData) {
 
-          // prepare property
-          this.prepareToSave(entity[key], td);
+          td.push(new EntityManager.TransactionElement(emd.location, entity, toSave));
 
-          if (pmd.location) {
-            // replace property's value with its id, if the property is manageable
-            entity[key] = entity[key].id;
-          }
+        } else {
+
+          // if saving new entity -> generate its id
+          toSave.id = toSave.id || this.em.generateId(emd.location, entity);
+
+          td.push(new EntityManager.TransactionElement(emd.location, toSave));
         }
       }
-      */
 
-      if (emd.location && !entity.id) {
-        entity.id = this.em.generateId(emd.location, entity);
-        td.push(new EntityManager.TransactionElement(emd.location, entity));
+      if (toSave.id === undefined) {
+        // don't save null or undefined value
+        delete toSave.id;
       }
 
-      return td;
+      return emd.location ? toSave.id : toSave;;
+    }
+
+    private getRelatedValueToSave(value: AbstractEntity, relation: Relation, td: EntityManager.TransactionData): Object {
+
+      let cascadingOk: boolean = (value.id && relation.isCascadeAllowed(Relation.Cascade.UPDATE)) ||
+        (!value.id && relation.isCascadeAllowed(Relation.Cascade.CREATE));
+
+      if (cascadingOk) {
+
+        // cascading allowed -> prepare to save property object
+        return this.prepareToSave(value, td);
+
+      }
+
+      if (value.id && relation.foreignEntityType.getMetadata().location) {
+
+        // property's type is intended to save to its own location -> replace property object with its id
+        return value.id;
+
+      } else if (!cascadingOk) {
+
+        console.warn('DAO.prepareToSave: deleting ' + relation.entityType.name + '.' + value.constructor.name + ' before save, check entity configuration');
+        return undefined;
+      }
     }
 
     private unsubscribeAll() {
@@ -211,7 +236,7 @@ export abstract class EntityManager implements AtqEnvFriendly {
 
 export namespace EntityManager {
   export class TransactionElement {
-    constructor(public location: string, public entity: AbstractEntity) {}
+    constructor(public location: string, public entity: AbstractEntity, public updateData?: Object) {}
   }
 
   export class TransactionData extends Array<TransactionElement> {}

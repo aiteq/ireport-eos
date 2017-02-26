@@ -24,12 +24,12 @@
     "zone.js": "^0.7.6"
   },
   "devDependencies": {
-    "@ng-bootstrap/ng-bootstrap": "^1.0.0-alpha.18",
+    "@ng-bootstrap/ng-bootstrap": "^1.0.0-alpha.20",
     "@types/reflect-metadata": "0.0.5",
     "angular2-font-awesome": "^1.0.0-alpha.2",
     "angular2-moment": "^1.1.0",
     "angular2-template-loader": "^0.6.0",
-    "angularfire2": "^2.0.0-beta.7",
+    "angularfire2": "^2.0.0-beta.7.1-pre",
     "awesome-typescript-loader": "^3.0.0-beta.18",
     "bootstrap": "^4.0.0-alpha.6",
     "bootstrap-loader": "^2.0.0-beta.19",

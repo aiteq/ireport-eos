@@ -3,11 +3,11 @@ import { DomSanitizer, SafeStyle } from '@angular/platform-browser';
 import { User } from '../model/user.entity';
 
 @Component({
-  selector: 'user-list-item',
-  templateUrl: './user-list-item.component.html',
-  styleUrls: ['./user-list-item.component.css']
+  selector: 'user-item',
+  templateUrl: './user-item.component.html',
+  styleUrls: ['./user-item.component.css']
 })
-export class UserListItemComponent implements OnChanges {
+export class UserItemComponent implements OnChanges {
   private userPhotoStyle: SafeStyle;
 
   @Input() user: User;

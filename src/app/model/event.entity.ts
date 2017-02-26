@@ -1,9 +1,10 @@
 import { Moment } from 'Moment';
 import * as moment from 'moment';
 //import { NgbDateStruct } from '@ng-bootstrap/ng-bootstrap';
-import { AbstractEntity, Entity, ManyToOne } from '../atq/persistence';
+import { AbstractEntity, Entity, ManyToOne, OneToMany, Relation } from '../atq/persistence';
 import { Accreditation } from './accreditation.entity';
 import { Registration } from './registration.entity';
+import { User } from './user.entity';
 import { Venue } from './venue.entity';
 
 @Entity('/events')
@@ -21,16 +22,16 @@ export class CalendarEvent extends AbstractEntity {
   title: string;
   start: string; // ISO 8601
   end: string; // ISO 8601
-  @ManyToOne(() => Venue) venue: Venue;
+  @ManyToOne(() => Venue, Relation.Cascade.CREATE) venue: Venue;
   annotation: string;
   chiefNotes: string;
   instructions: string;
-
-  createdBy: string;
-
-  accreditations: Accreditation[] = [];
   accreditationNotes: string;
-  registrations: Registration[] = [];
+
+  @ManyToOne(() => User) createdBy: User;
+
+  @OneToMany(() => Accreditation, Relation.Cascade.ALL) accreditations: Accreditation[] = [];
+  @OneToMany(() => Registration, Relation.Cascade.ALL) registrations: Registration[] = [];
 
   // TO-DO: remove
   editors: any[];
@@ -46,14 +47,6 @@ export class CalendarEvent extends AbstractEntity {
   constructor() {
     super();
     this.venue = new Venue();
-  }
-
-  get unassignedEditors(): Registration[] {
-    return this.registrations.filter(reg => reg.job == Registration.Job.EDITOR && reg.status == Registration.Status.UNASSIGNED);
-  }
-
-  get unassignedPhotographers(): Registration[] {
-    return this.registrations.filter(reg => reg.job == Registration.Job.PHOTOGRAPHER && reg.status == Registration.Status.UNASSIGNED);
   }
 
   get inputStartDate(): string {

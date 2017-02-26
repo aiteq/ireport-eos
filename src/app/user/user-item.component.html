@@ -1,0 +1,6 @@
+<ng-container *ngIf="user">
+  <div>
+    <div *ngIf="user.urlPhoto" [style]="userPhotoStyle"></div>
+  </div>
+  <span>{{user.name}}</span>
+</ng-container>

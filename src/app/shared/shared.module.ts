@@ -4,7 +4,6 @@ import { Angular2FontAwesomeModule } from 'angular2-font-awesome/angular2-font-a
 
 import { FocusDirective } from '../atq/focus.directive';
 import { EmptyDirective } from '../atq/empty.directive';
-import { SpinnerComponent } from './spinner.component';
 
 @NgModule({
   imports: [
@@ -15,13 +14,11 @@ import { SpinnerComponent } from './spinner.component';
   declarations: [
     FocusDirective,
     EmptyDirective,
-    SpinnerComponent,
   ],
 
   exports: [
     FocusDirective,
     EmptyDirective,
-    SpinnerComponent,
   ]
 })
 export class SharedModule { }

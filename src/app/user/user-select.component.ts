@@ -22,7 +22,7 @@ export class UserSelectComponent extends AtqComponent implements OnInit, OnChang
   //private user$: Observable<User>;
   private subscription: Subscription;
   private userPhotoStyle: SafeStyle;
-  private users: User[];
+  private users: User[] = [];
   private highlightTerm = Utils.highlightTerm;
   private inputVisible: boolean = false;
 
@@ -32,10 +32,14 @@ export class UserSelectComponent extends AtqComponent implements OnInit, OnChang
 
   ngOnInit() {
     this.dao = this.em.getDao<User>(User);
+    this.subscription = this.dao.list({ orderByChild: 'name' }).subscribe(users => {
+      this.users = users;
+    });
 
-    this.users = [];
+    /*this.users = [];
     let u: User = new User();
     u.name = 'Tomáš Klíma';
+    u.id = 'wafZDnzdPDXFighOZYQuM10YFHm1';
     this.users.push(u);
     u = new User();
     u.name = 'Tomáš Dařbič Klíma';
@@ -43,22 +47,13 @@ export class UserSelectComponent extends AtqComponent implements OnInit, OnChang
     this.users.push(u);
     u = new User();
     u.name = 'Ho ho ha ha';
-    this.users.push(u);
+    this.users.push(u);*/
   }
 
   ngOnChanges(changes: any) {
     if (changes.initialState && changes.initialState.currentValue) {
       this.inputVisible = changes.initialState.currentValue === 'input';
     }
-    /*
-    if (changes.uid && changes.uid.currentValue) {
-      this.user$ = this.dao.find(changes.uid.currentValue);
-      this.subscription = this.user$.subscribe(user => {
-        this.user = user;
-        this.userPhotoStyle = this.sanitizer.bypassSecurityTrustStyle(`background-image:url(${this.user.urlPhoto})`);
-      }, err => console.error(`Unable to load user ${err}`));
-    }
-    */
   }
 
   atqCleanUp() {

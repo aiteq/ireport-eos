@@ -1,6 +1,5 @@
 import { Component, Input, Output, OnInit, OnChanges, EventEmitter } from '@angular/core';
 import { Subscription, Observable } from 'rxjs';
-import { FirebaseObjectObservable } from 'angularfire2';
 import { AtqComponent } from '../atq/atq-component';
 import { CalendarEvent, ImportedEvent } from '../model/event.entity'
 import { Registration, User, Venue } from '../model/index';
@@ -14,7 +13,7 @@ import { Utils } from '../shared/utils';
   templateUrl: './event-inline.component.html',
   styleUrls: ['./event-inline.component.scss']
 })
-export class EventInlineComponent extends AtqComponent implements OnChanges {
+export class EventInlineComponent extends AtqComponent implements OnInit, OnChanges {
 
   private readonly EventType = CalendarEvent.Type;
   private readonly EventTypeNames = EventTypeComponent.TYPES;
@@ -24,8 +23,7 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
   private daoUser: DAO<User>;
   private daoVenue: DAO<Venue>;
 
-  private event$: FirebaseObjectObservable<CalendarEvent>;
-  private subscriptions: Subscription[] = [];
+  private subscription: Subscription;
   private btnsVisible: { [key: string]: boolean } = {};
 
   // helping accessors - it is not possible to access enums within namespaces from component template
@@ -35,7 +33,6 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
   private importedEvents: CalendarEvent[];
   private venues: Venue[];
 
-  private ex: any;
 
   @Input('event') eventObject: CalendarEvent;
 
@@ -43,19 +40,18 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
 
   constructor(private em: EntityManager) {
     super();
-  }
 
-  test = (pl: any) => console.log(pl);
+    this.daoEvent = this.em.getDao<CalendarEvent>(CalendarEvent);
+    this.daoImport = this.em.getDao<ImportedEvent>(ImportedEvent);
+    this.daoUser = this.em.getDao<User>(User);
+    this.daoVenue = this.em.getDao<Venue>(Venue);
+  }
 
   private cancel() {
     this.close.emit(null);
   }
 
   ngOnInit() {
-    this.daoEvent = this.em.getDao<CalendarEvent>(CalendarEvent);
-    this.daoImport = this.em.getDao<ImportedEvent>(ImportedEvent);
-    this.daoUser = this.em.getDao<User>(User);
-    this.daoVenue = this.em.getDao<Venue>(Venue);
 
     this.eventObject = this.eventObject || new CalendarEvent();
 
@@ -110,22 +106,24 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
 
   ngOnChanges(changes: any) {
     if (changes.eventObject && changes.eventObject.currentValue) {
-      this.eventObject = changes.eventObject.currentValue;
-      /*
-      this.event$ = <FirebaseObjectObservable<CalendarEvent>>this.daoEvent.find(changes.eventObject.currentValue.id);
-      this.subscriptions.push(this.event$.subscribe(event => {
-        this.eventObject = event;
-      }, err => console.error(`Unable to load event ${err}`)));
-      //*/
+      if (!this.subscription) {
+        this.subscription = this.daoEvent.find(changes.eventObject.currentValue.id).subscribe(event => {
+          this.eventObject = event;
+        });
+      }
     }
   }
 
   atqCleanUp() {
-    this.subscriptions.forEach(s => s.unsubscribe());
+    this.subscription.unsubscribe();
   }
 
   private add() {
-    this.daoEvent.save(this.eventObject).first().subscribe(event => this.close.emit(event.id), err => console.error('Unable to add event: ' + err));
+    this.save().first().subscribe(event => this.close.emit(event), err => console.error('Unable to add event: ' + err));
+  }
+
+  private save() {
+    return this.daoEvent.save(this.eventObject);
   }
 
   private searchImported = (text$: Observable<string>) =>
@@ -169,10 +167,14 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     return this.eventObject.accreditations.filter(acc => acc.registration.job == job);
   }
 
-  private updateAccreditations() {
-    /*this.event$.update({
-      accreditations: this.eventObject.accreditations
-    });*/
+  private getRegistrations(job: Registration.Job): Registration[] {
+    return this.eventObject.registrations.filter(reg => reg.job == job);
+  }
+
+  private updateAccreditationStatus(acc: Accreditation, status: Accreditation.Status) {
+    acc.status = status;
+
+    this.daoEvent.save(this.eventObject, { accreditations: this.eventObject.accreditations});
   }
 
   private assign(reg: Registration) {
@@ -184,10 +186,9 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     reg.status = Registration.Status.ASSIGNED;
     this.eventObject.accreditations.push(acc);
 
-    /*this.event$.update({
-      accreditations: this.eventObject.accreditations,
-      editors: this.eventObject.editors
-    });*/
+    this.eventObject.registrations.splice(this.eventObject.registrations.indexOf(reg), 1);
+
+    this.daoEvent.save(this.eventObject, { accreditations: this.eventObject.accreditations, registrations: this.eventObject.registrations});
   }
 
   private unassign(acc: Accreditation) {
@@ -195,10 +196,9 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     this.eventObject.accreditations.splice(this.eventObject.accreditations.indexOf(acc), 1);
     acc.registration.status = Registration.Status.UNASSIGNED;
 
-    /*this.event$.update({
-      accreditations: this.eventObject.accreditations,
-      editors: this.eventObject.editors
-    });*/
+    this.eventObject.registrations.push(acc.registration);
+
+    this.daoEvent.save(this.eventObject, { accreditations: this.eventObject.accreditations, registrations: this.eventObject.registrations});
   }
 
   private register(user: User, job: Registration.Job) {
@@ -206,9 +206,13 @@ export class EventInlineComponent extends AtqComponent implements OnChanges {
     reg.job = job;
     reg.user = user;
     this.eventObject.registrations.push(reg);
+
+    this.daoEvent.save(this.eventObject, { registrations: this.eventObject.registrations });
   }
 
   private unregister(reg: Registration) {
     this.eventObject.registrations.splice(this.eventObject.registrations.indexOf(reg), 1);
+
+    this.daoEvent.save(this.eventObject, { registrations: this.eventObject.registrations });
   }
 }

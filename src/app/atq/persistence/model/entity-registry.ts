@@ -20,9 +20,9 @@ export class EntityRegistry {
     return entityType;
   }
 
-  static registerRelation(entityType: Function, key: string, propertyTypeFn: Function, type: Relation.Type): void {
+  static registerRelation(entityType: Function, key: string, propertyTypeFn: Function, type: Relation.Type, cascade?: Relation.Cascade): void {
 
-    this.getMetadata(entityType).relations.set(key, new Relation((entityType as EntityType), (propertyTypeFn as EntityType), type));
+    this.getMetadata(entityType).relations.set(key, new Relation((entityType as EntityType), (propertyTypeFn as EntityType), type, cascade));
   }
 
   private static getMetadata(entityType: Function): EntityMetadata {

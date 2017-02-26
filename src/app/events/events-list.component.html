@@ -16,9 +16,10 @@
 
   <event-inline *ngIf="list.showInlineForm" [@animForm]="list.showInlineForm" (close)="list.showInlineForm = false; activeEvent = $event;" class="list-group-item"></event-inline>
 
-  <!-- month -->
   <ng-container *ngFor="let month of months; let m = index">
-    <a href="#" (click)="$event.preventDefault();monthsVisible[m] = !monthsVisible[m]; activeEvent = null;" class="list-group-item list-group-item-info list-group-item-action py-1 px-2 d-flex" [class.greyed-out]="activeEvent">
+
+    <!-- month -->
+    <a href="#" (click)="clickMonth($event, m)" class="list-group-item list-group-item-info list-group-item-action py-1 px-2 d-flex" [class.greyed-out]="!!activeEvent">
       <fa class="mr-1" [name]="monthsVisible[m] ? 'caret-down' : 'caret-right'"></fa>
       <span>{{month.name}}</span>
       <span class="badge badge-default ml-auto">{{month.events.length}}</span>
@@ -27,33 +28,21 @@
       <ng-container *ngFor="let event of month.events" >
 
         <!-- event -->
-        <a href="#" (click)="$event.preventDefault(); activeEvent = activeEvent ? null : event.id;" class="list-group-item list-group-item-action py-1 px-2" [class.active]="activeEvent == event.id" [class.greyed-out]="activeEvent && activeEvent != event.id" style="white-space: nowrap">
+        <a href="#" (click)="clickEvent($event, event)" class="list-group-item list-group-item-action py-1 px-2" [class.active]="!!activeEvent && activeEvent.id == event.id" [class.greyed-out]="!!activeEvent && activeEvent.id != event.id" style="white-space: nowrap">
           <event-type [type]="event.type"></event-type>
           <div class="ml-2" style="">
             {{(event.start | amDateFormat:'D. M.')}}
             <span *ngIf="event.end">&nbsp;-&nbsp;{{(event.end | amDateFormat:'D. M.')}}</span>
           </div>
           <strong class="mx-1">{{event.title}}</strong>
-          <small>({{event.venue?.name}})</small>
+          <small *ngIf="event.venue">({{event.venue.name}})</small>
         </a>
 
         <!-- inline event form -->
-        <event-inline *ngIf="activeEvent == event.id" [event]="event" class="list-group-item"></event-inline>
+        <event-inline *ngIf="!!activeEvent && activeEvent.id == event.id" [@animForm]="!!activeEvent && activeEvent.id == event.id" [event]="event" class="list-group-item"></event-inline>
 
       </ng-container>
     </ng-container>
   </ng-container>
 
 </div>
-<template #modalAddEvent let-c="close" let-d="dismiss">
-  <div class="modal-header">
-    <h4 class="modal-title">Add new event</h4>
-    <button type="button" class="close" aria-label="Close" (click)="d('Cross click')">
-      <span>&times;</span>
-    </button>
-  </div>
-  <event-form class="modal-body"></event-form>
-  <div class="modal-footer">
-    <button type="button" class="btn btn-secondary" (click)="c('Close click')">Close</button>
-  </div>
-</template>

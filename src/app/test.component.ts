@@ -3,6 +3,7 @@ import { Observable }     from 'rxjs/Observable';
 import { AngularFireDatabase } from 'angularfire2';
 import { DAO, EntityManager, AbstractEntity, Entity, ManyToOne, OneToMany } from './atq/persistence';
 import { AtqComponent } from './atq/atq-component';
+import { User } from './model/user.entity';
 
 @Component({
   selector: 'test',
@@ -16,12 +17,22 @@ export class TestComponent extends AtqComponent implements OnInit {
 
   constructor (private em: EntityManager, private db: AngularFireDatabase) {
     super();
-    this.daox = em.getDao<TestEntityX>(TestEntityX);
+    //this.daox = em.getDao<TestEntityX>(TestEntityX);
     //this.daoy = em.getDao<TestEntityY>(TestEntityY);
   }
 
   ngOnInit() {
-    //*
+
+    this.db.object('/test/x').update({
+      '-KcdvwpuWt8_h4VCY0Fm/aaa': 'Asss',
+      '-KcdvwpuWt8_h4VCY0Fm/bbb': 'Bsss',
+      'mrdka': {aaa: 'AssM', bbb: 'BssM'},
+    });
+
+    //let dao: DAO<User> = this.em.getDao<User>(User);
+    //dao.list().subscribe(x => console.log(x));
+
+    /*
     this.daox.find('-KdI6RGeIsoEHj6EDvGM').subscribe(x => {
       console.log(x);
     });
